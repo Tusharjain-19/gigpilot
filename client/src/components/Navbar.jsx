@@ -17,9 +17,9 @@ export default function Navbar({ activeTab, setActiveTab }) {
     { id: 'dashboard', label: t.dashboardTab || 'Dashboard', icon: LayoutDashboard },
     { id: 'radar', label: t.radarTab || 'Radar Map', icon: Radar, badge: 'LIVE' },
     { id: 'ocr', label: t.ocrTab || 'OCR Predictor', icon: Upload },
-    { id: 'keys', label: t.keysTab || 'API Keys', icon: Key },
     { id: 'missions', label: t.missionsTab || 'Missions', icon: Trophy },
     { id: 'chat', label: t.chatTab || 'Copilot Q&A', icon: MessageSquare },
+    { id: 'profile', label: 'Profile', icon: Key },
   ];
 
   return (

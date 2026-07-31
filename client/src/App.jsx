@@ -10,6 +10,7 @@ import ScreenshotOCR from './components/ScreenshotOCR';
 import APISettings from './components/APISettings';
 import LandingPage from './components/LandingPage';
 import Navbar from './components/Navbar';
+import Profile from './components/Profile';
 import { api } from './services/api';
 import { Zap, ShieldCheck, ArrowRight, Activity, Sparkles, Navigation } from 'lucide-react';
 
@@ -231,6 +232,12 @@ export default function App() {
         {activeTab === 'chat' && (
           <div className="space-y-4">
             <ChatFallback />
+          </div>
+        )}
+
+        {activeTab === 'profile' && (
+          <div className="space-y-4">
+            <Profile />
           </div>
         )}
       </main>

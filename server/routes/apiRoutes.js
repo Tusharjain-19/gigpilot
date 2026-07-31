@@ -2,7 +2,50 @@ import express from 'express';
 import { worker, baseZones, mockStores } from '../data/store.js';
 import { getRecommendation, updateGigDNAScore, parseOrderOCR } from '../services/recommendationEngine.js';
 
+import db from '../db.js';
+
 const router = express.Router();
+
+// Profile / Auth Routes
+
+router.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  db.get("SELECT * FROM users WHERE username = ? AND password = ?", [username, password], (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!row) return res.status(401).json({ error: "Invalid credentials" });
+    res.json({ user: row });
+  });
+});
+
+router.get('/profile/:id', (req, res) => {
+  const userId = req.params.id;
+  db.get("SELECT * FROM users WHERE id = ?", [userId], (err, user) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!user) return res.status(404).json({ error: "User not found" });
+    
+    db.all("SELECT * FROM jobs WHERE user_id = ?", [userId], (err, jobs) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ user, jobs });
+    });
+  });
+});
+
+router.put('/profile/:id/goal', (req, res) => {
+  const userId = req.params.id;
+  const { savings_goal } = req.body;
+  db.run("UPDATE users SET savings_goal = ? WHERE id = ?", [savings_goal, userId], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: true, updatedRows: this.changes });
+  });
+});
+
+router.get('/benchmarks', (req, res) => {
+  db.all("SELECT * FROM fare_benchmarks", [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
 
 // 1. GET /api/dashboard
 router.get('/dashboard', (req, res) => {
@@ -90,6 +133,16 @@ router.post('/order/decision', (req, res) => {
   if (workerDecision === 'accepted') {
     worker.earningsToday += (order?.profitEstimate || 40);
     worker.ordersAccepted += 1;
+    
+    // Log the job to the database for the profile live feed
+    const today = new Date().toISOString().split('T')[0];
+    db.run(
+      "INSERT INTO jobs (user_id, date, earnings, hours) VALUES (?, ?, ?, ?)",
+      [1, today, order?.profitEstimate || 40, (order?.timeEstimateMin || 15) / 60],
+      function(err) {
+        if (err) console.error("Error logging job to DB:", err.message);
+      }
+    );
   } else {
     worker.ordersRejected += 1;
   }
@@ -164,11 +217,17 @@ router.post('/chat', async (req, res) => {
     return res.json({ answer });
   }
 
-  try {
-    const messages = [
-      {
-        role: "system",
-        content: `You are GigPilot AI, a supportive, plain-language companion and rights advisor for gig-workers (delivery riders, cab drivers).
+  db.all("SELECT * FROM fare_benchmarks", [], async (err, benchmarks) => {
+    let benchmarksText = "No benchmarks available.";
+    if (!err && benchmarks && benchmarks.length > 0) {
+      benchmarksText = benchmarks.map(b => `${b.city} ${b.service_type}: ₹${b.fair_rate_per_km}/km, min base ₹${b.min_base_pay}`).join("; ");
+    }
+
+    try {
+      const messages = [
+        {
+          role: "system",
+          content: `You are GigPilot AI, a supportive, plain-language companion and rights advisor for gig-workers (delivery riders, cab drivers).
 Keep answers short, specific, supportive and numeric.
 Focus on safety, fairness, and worker dignity.
 Current shift context:
@@ -176,42 +235,44 @@ Current shift context:
 - Orders Accepted: ${worker.ordersAccepted}
 - Orders Rejected: ${worker.ordersRejected}
 - Hours Active Today: ${worker.hoursActiveToday.toFixed(1)}h
-- GigDNA scores: Reliability: ${worker.gigDNA.reliability}, Safety: ${worker.gigDNA.safety}, Efficiency: ${worker.gigDNA.efficiency}, Income Stability: ${worker.gigDNA.incomeStability}, Customer Happiness: ${worker.gigDNA.customerHappiness}`
-      },
-      {
-        role: "user",
-        content: query
+- GigDNA scores: Reliability: ${worker.gigDNA.reliability}, Safety: ${worker.gigDNA.safety}, Efficiency: ${worker.gigDNA.efficiency}, Income Stability: ${worker.gigDNA.incomeStability}, Customer Happiness: ${worker.gigDNA.customerHappiness}
+- Fare Benchmarks: ${benchmarksText}`
+        },
+        {
+          role: "user",
+          content: query
+        }
+      ];
+
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${groqApiKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: messages,
+          temperature: 0.7,
+          max_tokens: 150
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Groq API returned ${response.status}: ${errorText}`);
       }
-    ];
 
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${groqApiKey}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        messages: messages,
-        temperature: 0.7,
-        max_tokens: 150
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Groq API returned ${response.status}: ${errorText}`);
+      const data = await response.json();
+      const answer = data.choices?.[0]?.message?.content || "No response content from Groq.";
+      res.json({ answer });
+    } catch (error) {
+      console.error("Groq API Call Error:", error);
+      res.json({
+        answer: `I had trouble connecting to my brain, but based on your local metrics: You have earned ₹${worker.earningsToday} today, and safety remains at ${worker.gigDNA.safety}/100. Rest if you feel fatigued!`
+      });
     }
-
-    const data = await response.json();
-    const answer = data.choices?.[0]?.message?.content || "No response content from Groq.";
-    res.json({ answer });
-  } catch (error) {
-    console.error("Groq API Call Error:", error);
-    res.json({
-      answer: `I had trouble connecting to my brain, but based on your local metrics: You have earned ₹${worker.earningsToday} today, and safety remains at ${worker.gigDNA.safety}/100. Rest if you feel fatigued!`
-    });
-  }
+  });
 });
 
 // 8. POST /api/order/ocr-parse
