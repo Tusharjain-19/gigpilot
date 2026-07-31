@@ -111,7 +111,7 @@ export default function Profile() {
         </div>
         <div className="text-right">
           <div className="text-xs text-slate-400">vs Prev: ₹{previous.toFixed(2)}</div>
-          <div className={\`mt-1 flex items-center justify-end text-sm font-semibold \${isUp ? 'text-green-500' : 'text-red-500'}\`}>
+          <div className={`mt-1 flex items-center justify-end text-sm font-semibold ${isUp ? 'text-green-500' : 'text-red-500'}`}>
             {isUp ? <TrendingUp className="w-4 h-4 mr-1" /> : <TrendingDown className="w-4 h-4 mr-1" />}
             ₹{Math.abs(diff).toFixed(2)}
           </div>
@@ -140,7 +140,7 @@ export default function Profile() {
           <div className="w-full h-3 bg-slate-100 dark:bg-[#1A1D24] rounded-full overflow-hidden">
             <div 
               className="h-full bg-blue-500 rounded-full transition-all duration-500"
-              style={{ width: \`\${progressPercent}%\` }}
+              style={{ width: `${progressPercent}%` }}
             />
           </div>
         </div>
