@@ -1,4 +1,4 @@
-# GigPilot AI
+# GigPilot 
 
 Submission for the GigShield Hackathon
 
