@@ -1,20 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { Radar, Navigation, ArrowUpRight, Compass, Sparkles, MapPin, Gauge, ExternalLink, Clock, CloudRain, X } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Radar, Navigation, ArrowUpRight, Compass, Sparkles, MapPin, Gauge, ExternalLink, Clock, CloudRain, X, CheckCircle } from 'lucide-react';
+import L from 'leaflet';
 import { translations } from '../services/translations';
 
-// Default spatial coordinates around worker center (50%, 50%)
-const fallbackZoneCoords = {
-  koramangala: { x: 32, y: 38 },
-  indiranagar: { x: 72, y: 24 },
-  'hsr layout': { x: 42, y: 76 },
-  'mg road': { x: 76, y: 52 },
-  whitefield: { x: 88, y: 20 },
-  jayanagar: { x: 18, y: 64 }
+// Default spatial coordinates around Bangalore center
+const zoneMapCoordinates = {
+  z1: { lat: 12.9352, lng: 77.6245, name: "Koramangala" },
+  z2: { lat: 12.9784, lng: 77.6408, name: "Indiranagar" },
+  z3: { lat: 12.9121, lng: 77.6446, name: "HSR Layout" },
+  z4: { lat: 12.9756, lng: 77.6066, name: "MG Road" },
+  z5: { lat: 12.9698, lng: 77.7499, name: "Whitefield" },
+  z6: { lat: 12.9250, lng: 77.5938, name: "Jayanagar" }
 };
 
 export default function OpportunityRadar({ zones = [], topRecommendation, weather, peakTimeAnalysis }) {
+  const mapContainerRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const markersRef = useRef([]);
+
   const [selectedZone, setSelectedZone] = useState(zones[0] || null);
   const [activeRouteModal, setActiveRouteModal] = useState(null);
+  const [userLocation, setUserLocation] = useState({ lat: 12.9166, lng: 77.6101, name: "BTM Layout (Live GPS)" });
+  const [isLocating, setIsLocating] = useState(false);
+  const [gpsError, setGpsError] = useState(null);
   const [lang, setLang] = useState(window.__selectedLang || 'en');
 
   useEffect(() => {
@@ -28,6 +36,137 @@ export default function OpportunityRadar({ zones = [], topRecommendation, weathe
       setSelectedZone(zones[0]);
     }
   }, [zones]);
+
+  // Initialize Leaflet Map once
+  useEffect(() => {
+    if (!mapContainerRef.current) return;
+    if (mapInstanceRef.current) return;
+
+    // Create map instance
+    const map = L.map(mapContainerRef.current, {
+      center: [userLocation.lat, userLocation.lng],
+      zoom: 13,
+      zoomControl: false,
+      attributionControl: false
+    });
+
+    // Dark Mode CartoDB Tile Layer (Google Maps Dark vector aesthetic)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19,
+      subdomains: 'abcd'
+    }).addTo(map);
+
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+    mapInstanceRef.current = map;
+
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, []);
+
+  // Update map markers whenever userLocation or zones change
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    // Clear old markers
+    markersRef.current.forEach(m => m.remove());
+    markersRef.current = [];
+
+    // 1. Add Pulsing YOU Marker at user live GPS coordinates
+    const userIcon = L.divIcon({
+      className: 'custom-user-marker',
+      html: `
+        <div class="relative flex items-center justify-center">
+          <div class="absolute w-8 h-8 rounded-full bg-[#15803D]/40 animate-ping"></div>
+          <div class="w-5 h-5 rounded-full bg-[#15803D] border-2 border-white flex items-center justify-center text-[9px] font-bold text-white shadow-lg">
+            YOU
+          </div>
+        </div>
+      `,
+      iconSize: [24, 24],
+      iconAnchor: [12, 12]
+    });
+
+    const userMarker = L.marker([userLocation.lat, userLocation.lng], { icon: userIcon })
+      .bindPopup(`<div class="font-sans text-xs font-bold text-slate-800">📍 ${userLocation.name}</div>`)
+      .addTo(map);
+
+    markersRef.current.push(userMarker);
+
+    // 2. Add Zone Markers
+    zones.forEach(zone => {
+      const coords = zoneMapCoordinates[zone.id] || { lat: userLocation.lat + 0.02, lng: userLocation.lng + 0.02 };
+      const displayRate = zone.expectedRatePerHour || zone.ratePerHour;
+      const isSelected = selectedZone?.id === zone.id;
+
+      const markerColor = zone.demand === 'high' ? '#15803D' : (zone.demand === 'medium' ? '#C2410C' : '#71717A');
+
+      const zoneIcon = L.divIcon({
+        className: 'custom-zone-marker',
+        html: `
+          <div class="cursor-pointer transition-transform duration-200 hover:scale-110 flex items-center gap-1 px-2 py-0.5 rounded-full border shadow-md ${
+            isSelected
+              ? 'bg-[#111318] border-[#79DB8D] ring-2 ring-[#15803D] scale-110 z-30'
+              : 'bg-[#111318]/90 border-[#272A31]'
+          }">
+            <span class="w-2 h-2 rounded-full" style="background-color: ${markerColor}"></span>
+            <span class="text-[11px] font-bold text-white whitespace-nowrap">${zone.name}</span>
+            <span class="text-[10px] font-mono font-bold text-[#79DB8D] bg-[#15803D]/20 px-1 py-0.2 rounded border border-[#15803D]/40">
+              ₹${displayRate}/h
+            </span>
+          </div>
+        `,
+        iconSize: [120, 26],
+        iconAnchor: [60, 13]
+      });
+
+      const zoneMarker = L.marker([coords.lat, coords.lng], { icon: zoneIcon })
+        .on('click', () => setSelectedZone(zone))
+        .addTo(map);
+
+      markersRef.current.push(zoneMarker);
+    });
+
+  }, [userLocation, zones, selectedZone]);
+
+  // Get Live Browser Geolocation
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      setGpsError("Geolocation is not supported by your browser");
+      return;
+    }
+
+    setIsLocating(true);
+    setGpsError(null);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const newLoc = {
+          lat: Number(latitude.toFixed(4)),
+          lng: Number(longitude.toFixed(4)),
+          name: "Live GPS Location"
+        };
+        setUserLocation(newLoc);
+        setIsLocating(false);
+
+        // Center map on new location
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.flyTo([latitude, longitude], 14, { duration: 1.5 });
+        }
+      },
+      (err) => {
+        setIsLocating(false);
+        setGpsError("Permission denied or GPS signal unavailable");
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
 
   const getDemandColor = (demand) => {
     switch (demand) {
@@ -58,172 +197,113 @@ export default function OpportunityRadar({ zones = [], topRecommendation, weathe
   const currentZone = selectedZone || zones[0] || {
     name: 'Koramangala',
     demand: 'high',
-    ratePerHour: 245,
-    distanceKm: 1.8,
-    multiplier: '1.4x'
+    ratePerHour: 322,
+    distanceKm: 2.6,
+    activeDrivers: 14,
+    effectiveSurge: '1.95x'
   };
 
-  const openGoogleMapsRoute = (zone) => {
-    const destination = encodeURIComponent(`${zone.name}, Bangalore, Karnataka`);
-    const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
+  const currentDemandStyle = getDemandColor(currentZone.demand);
+
+  const handleOpenGoogleMapsRoute = (zoneName) => {
+    const coords = zoneMapCoordinates[selectedZone?.id || 'z1'] || { lat: 12.9352, lng: 77.6245 };
+    const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.lat},${userLocation.lng}&destination=${coords.lat},${coords.lng}&travelmode=driving`;
     window.open(mapsUrl, '_blank');
   };
 
-  const handleStartNavigation = (zone) => {
-    setActiveRouteModal(zone);
-    openGoogleMapsRoute(zone);
-  };
-
-  const t = translations[lang] || translations.en;
-
-  const recZoneName = topRecommendation?.zoneName || currentZone?.name || 'Koramangala';
-  const recZoneObj = zones.find(z => z.name.toLowerCase() === recZoneName.toLowerCase()) || currentZone;
-
   return (
-    <div className="card-panel p-4 sm:p-5 relative overflow-hidden">
-      
-      {/* Dynamic Keyframe Animations for Radar Sweep */}
-      <style>{`
-        @keyframes radarSpin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        @keyframes pulseRipple {
-          0% { transform: scale(0.6); opacity: 0.8; }
-          100% { transform: scale(1.8); opacity: 0; }
-        }
-        .radar-sweep-beam {
-          animation: radarSpin 4s linear infinite;
-          transform-origin: center center;
-        }
-        .radar-pulse-ring {
-          animation: pulseRipple 3s ease-out infinite;
-        }
-      `}</style>
+    <div className="space-y-4 pb-20">
 
-      {/* Section Title */}
-      <div className="flex items-center justify-between gap-3 mb-4">
-        <div className="flex items-center gap-2.5">
-          <div className="p-2 rounded bg-[#15803D]/10 border border-[#15803D]/30 text-[#15803D] dark:text-[#79DB8D]">
-            <Radar className="w-4 h-4" />
-          </div>
-          <div>
-            <h3 className="font-heading font-semibold text-base text-[var(--text-primary)] tracking-tight flex items-center gap-2">
-              {t.radarTitle || 'Opportunity Radar'}
+      {/* Top Banner Header & GPS Trigger */}
+      <div className="card-panel p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+        <div>
+          <div className="flex items-center gap-2">
+            <h3 className="font-heading font-bold text-base sm:text-lg text-[var(--text-primary)] flex items-center gap-2">
+              <Radar className="w-5 h-5 text-[#15803D] dark:text-[#79DB8D] animate-spin" style={{ animationDuration: '6s' }} />
+              Live 360° Opportunity Radar
             </h3>
-            <p className="text-xs text-[var(--text-muted)]">{t.radarDesc || 'Live demand density & real-time rate hotspots'}</p>
+            <span className="text-[9px] font-mono font-semibold px-2 py-0.5 rounded bg-[#15803D]/10 text-[#15803D] dark:text-[#79DB8D] border border-[#15803D]/30 uppercase">
+              GPS ACTIVE
+            </span>
           </div>
+          <p className="text-xs text-[var(--text-muted)] flex items-center gap-1.5 mt-1">
+            <MapPin className="w-3.5 h-3.5 text-[#15803D]" /> Current Position: <span className="font-semibold text-[var(--text-primary)]">{userLocation.name} ({userLocation.lat}, {userLocation.lng})</span>
+          </p>
         </div>
 
-        <div className="text-right">
-          <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-[var(--text-primary)] bg-[var(--surface-low)] border border-[var(--border-color)] px-2.5 py-1 rounded flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#15803D] animate-ping"></span>
-            <Compass className="w-3 h-3 text-[#15803D]" /> {t.gpsSweep || 'LIVE GPS SWEEP'}
-          </span>
-        </div>
-      </div>
-
-      {/* Dynamic AI Recommendation Banner */}
-      <div className="mb-4 bg-[var(--surface-low)] border border-[#15803D]/40 rounded p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
-        <div className="flex items-start sm:items-center gap-3">
-          <div className="p-2 rounded bg-[#15803D]/20 text-[#15803D] dark:text-[#79DB8D] shrink-0 mt-0.5 sm:mt-0">
-            <Sparkles className="w-4 h-4" />
-          </div>
-          <div>
-            <div className="text-[10px] font-mono font-semibold text-[#15803D] dark:text-[#79DB8D] uppercase tracking-wider">{t.aiRecommendation || 'AI RECOMMENDATION'}</div>
-            <div className="text-xs sm:text-sm font-medium text-[var(--text-primary)] leading-tight">
-              {topRecommendation?.actionPrompt || `Head to ${recZoneName} → Low competition & high profit surge zone.`}
-            </div>
-          </div>
-        </div>
         <button
-          onClick={() => handleStartNavigation(recZoneObj)}
-          className="flex items-center justify-center gap-1.5 px-3.5 py-2 rounded bg-[#15803D] hover:bg-[#166534] active:scale-95 text-white text-xs font-semibold transition-all shrink-0 shadow-md"
+          onClick={handleGetLocation}
+          disabled={isLocating}
+          className="flex items-center gap-2 px-3.5 py-2 rounded bg-[#15803D] hover:bg-[#166534] text-white text-xs font-semibold active:scale-95 transition-all shadow-sm shrink-0"
         >
-          <Navigation className="w-3.5 h-3.5" /> {t.route || 'Route'}
+          <Compass className={`w-4 h-4 ${isLocating ? 'animate-spin' : ''}`} />
+          <span>{isLocating ? 'Acquiring GPS...' : 'Locate Me (Live GPS)'}</span>
         </button>
       </div>
 
-      {/* Google Maps Styled Interactive Radar Canvas */}
-      <div className="relative w-full h-72 sm:h-80 bg-[#0B0F17] rounded-xl border border-[var(--border-color)] overflow-hidden mb-4 flex items-center justify-center shadow-inner">
-        
-        {/* Map Vector Grid & Road Overlay */}
-        <div className="absolute inset-0 bg-[radial-gradient(#15803D_1px,transparent_1px)] [background-size:24px_24px] opacity-15"></div>
-        
-        {/* Simulated Road Lines (Google Maps dark theme aesthetic) */}
-        <svg className="absolute inset-0 w-full h-full opacity-20 pointer-events-none stroke-[#79DB8D]" strokeWidth="1.5" fill="none">
-          <path d="M 0 100 Q 150 140 400 120 T 800 200" strokeDasharray="4 4" />
-          <path d="M 120 0 Q 180 180 220 350" />
-          <path d="M 300 0 Q 250 160 380 350" strokeWidth="2" />
-          <path d="M 0 220 Q 200 200 400 260 T 800 240" strokeWidth="2" />
-        </svg>
-
-        {/* Concentric Radar Distance Rings */}
-        <div className="absolute w-64 h-64 sm:w-72 sm:h-72 rounded-full border border-[#15803D]/20 pointer-events-none"></div>
-        <div className="absolute w-44 h-44 sm:w-48 sm:h-48 rounded-full border border-[#15803D]/30 pointer-events-none"></div>
-        <div className="absolute w-24 h-24 sm:w-28 sm:h-28 rounded-full border border-[#15803D]/40 pointer-events-none"></div>
-        
-        {/* Radar Crosshair Axes */}
-        <div className="absolute w-full h-[1px] bg-[#15803D]/25 pointer-events-none"></div>
-        <div className="absolute h-full w-[1px] bg-[#15803D]/25 pointer-events-none"></div>
-
-        {/* Pulsing Radar Ripple Ring */}
-        <div className="absolute w-36 h-36 rounded-full border border-[#79DB8D] radar-pulse-ring pointer-events-none"></div>
-
-        {/* 360-Degree Rotating Radar Beam Sweep */}
-        <div className="absolute w-72 h-72 sm:w-80 sm:h-80 rounded-full pointer-events-none radar-sweep-beam">
-          <div 
-            className="w-full h-full rounded-full"
-            style={{
-              background: 'conic-gradient(from 0deg, rgba(21, 128, 61, 0.35) 0deg, rgba(121, 219, 141, 0.15) 30deg, transparent 60deg)'
-            }}
-          ></div>
+      {gpsError && (
+        <div className="p-3 rounded bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs flex items-center gap-2">
+          <span>⚠️ {gpsError} — Defaulting to Bangalore center.</span>
         </div>
+      )}
 
-        {/* Center Marker: YOU (Current Worker Location) */}
-        <div className="absolute z-20 flex flex-col items-center justify-center pointer-events-none" style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
-          <div className="relative flex items-center justify-center">
-            <div className="w-5 h-5 rounded-full bg-[#15803D]/40 border-2 border-[#79DB8D] flex items-center justify-center shadow-lg">
-              <div className="w-2.5 h-2.5 rounded-full bg-[#79DB8D] animate-ping"></div>
+      {/* Proactive Top Recommendation Banner */}
+      {topRecommendation && (
+        <div className="p-3.5 sm:p-4 rounded-xl bg-gradient-to-r from-[#15803D]/20 via-[#111318] to-[#111318] border border-[#15803D]/40 flex items-center justify-between gap-3 shadow-md">
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-lg bg-[#15803D] text-white shrink-0 mt-0.5">
+              <Sparkles className="w-4 h-4" />
             </div>
-          </div>
-          <span className="text-[10px] font-mono font-bold text-white bg-[#15803D] px-2 py-0.5 rounded-full border border-[#79DB8D] mt-1 shadow-md">
-            {t.you || 'YOU'}
-          </span>
-        </div>
-
-        {/* Nearby Map Location Pins with Hourly Rates */}
-        {zones.map((zone) => {
-          const keyName = zone.name.toLowerCase();
-          const defaultPos = fallbackZoneCoords[keyName] || { x: 50, y: 50 };
-          const posX = zone.coords?.x !== undefined ? zone.coords.x : defaultPos.x;
-          const posY = zone.coords?.y !== undefined ? zone.coords.y : defaultPos.y;
-
-          const style = getDemandColor(zone.demand);
-          const isSelected = currentZone.id === zone.id;
-          const displayRate = zone.expectedRatePerHour || zone.ratePerHour;
-
-          return (
-            <button
-              key={zone.id}
-              onClick={() => setSelectedZone(zone)}
-              style={{ left: `${posX}%`, top: `${posY}%` }}
-              className={`absolute z-10 transform -translate-x-1/2 -translate-y-1/2 focus:outline-none transition-all duration-200 group`}
-            >
-              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border shadow-lg transition-all ${
-                isSelected
-                  ? 'bg-[#111318] border-[#79DB8D] ring-2 ring-[#15803D] scale-110 z-30'
-                  : 'bg-[#111318]/90 border-[#272A31] hover:border-[#15803D] hover:scale-105'
-              }`}>
-                <span className={`w-2 h-2 rounded-full ${style.dot} animate-pulse`}></span>
-                <span className="text-xs font-semibold text-white whitespace-nowrap">{zone.name}</span>
-                <span className="text-[10px] font-mono font-bold text-[#79DB8D] bg-[#15803D]/20 px-1.5 py-0.5 rounded border border-[#15803D]/40">
-                  ₹{displayRate}/h
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] font-mono font-bold text-[#79DB8D] uppercase tracking-wider">TOP COPILOT RECOMMENDATION</span>
+                <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/80 px-1.5 py-0.2 rounded border border-emerald-800">
+                  {topRecommendation.surgeMultiplier || '1.95x'} SURGE
                 </span>
               </div>
-            </button>
-          );
-        })}
+              <p className="text-xs sm:text-sm font-semibold text-[#F4F4F5] mt-0.5">
+                {topRecommendation.actionPrompt || `Head to ${topRecommendation.zoneName} (${topRecommendation.distanceKm}km away) — Low competition.`}
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => handleOpenGoogleMapsRoute(topRecommendation.zoneName)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#15803D] hover:bg-[#166534] text-white text-xs font-semibold transition-all shrink-0 active:scale-95 shadow"
+          >
+            <Navigation className="w-3.5 h-3.5 fill-white" />
+            <span>Route</span>
+          </button>
+        </div>
+      )}
+
+      {/* Leaflet Live Vector Map Container */}
+      <div className="relative card-panel rounded-xl overflow-hidden shadow-lg border border-[var(--border-color)]">
+        
+        {/* Leaflet Map Canvas */}
+        <div ref={mapContainerRef} className="w-full h-80 sm:h-96 lg:h-[420px] bg-[#090B0E]" />
+
+        {/* 360-Degree Rotating Conic Radar Sweep Overlay */}
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-10 overflow-hidden">
+          <div
+            className="w-[450px] h-[450px] rounded-full border border-[#15803D]/20 animate-spin"
+            style={{
+              animationDuration: '7s',
+              animationTimingFunction: 'linear',
+              background: 'conic-gradient(from 0deg at 50% 50%, rgba(21, 128, 61, 0.25) 0deg, rgba(21, 128, 61, 0) 65deg, transparent 360deg)'
+            }}
+          />
+          <div className="absolute w-[300px] h-[300px] rounded-full border border-[#15803D]/25" />
+          <div className="absolute w-[150px] h-[150px] rounded-full border border-[#15803D]/30" />
+        </div>
+
+        {/* Floating Map Legend Overlay */}
+        <div className="absolute top-3 right-3 z-20 bg-[#111318]/90 backdrop-blur-md p-2.5 rounded-lg border border-[#272A31] text-[10px] text-slate-300 space-y-1 shadow-md hidden xs:block">
+          <div className="font-mono font-bold text-[9px] text-[#A1A1AA] uppercase tracking-wider mb-1">LIVE DEMAND MAP</div>
+          <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#15803D]"></span> High Surge (&gt;₹240/h)</div>
+          <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#C2410C]"></span> Moderate (&gt;₹180/h)</div>
+          <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#71717A]"></span> Standard Flow</div>
+        </div>
       </div>
 
       {/* Zone Cards Grid below Map */}
@@ -236,123 +316,131 @@ export default function OpportunityRadar({ zones = [], topRecommendation, weathe
             <div
               key={zone.id}
               onClick={() => setSelectedZone(zone)}
-              className={`cursor-pointer rounded p-2.5 border transition-all ${
+              className={`cursor-pointer rounded-lg p-2.5 sm:p-3 border transition-all ${
                 isSelected
-                  ? 'bg-[var(--surface-low)] border-[#15803D] ring-1 ring-[#15803D]/30'
-                  : 'bg-[var(--surface-card)] border-[var(--border-color)] hover:border-[#15803D]'
+                  ? 'card-panel-active bg-[#15803D]/10 border-[#15803D] ring-1 ring-[#15803D]'
+                  : 'card-panel hover:border-[var(--text-muted)]'
               }`}
             >
-              <div className="flex items-center justify-between gap-1 mb-1">
-                <span className="text-xs font-semibold text-[var(--text-primary)] truncate">{zone.name}</span>
-                <span className={`text-[9px] px-1.5 py-0.2 rounded uppercase ${style.badge}`}>
-                  {zone.demand}
-                </span>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-heading font-semibold text-[var(--text-primary)] truncate">{zone.name}</span>
+                <span className={`w-2 h-2 rounded-full ${style.dot}`}></span>
               </div>
 
-              <div className="flex items-baseline justify-between text-xs">
-                <span className="font-mono font-bold text-[#15803D] dark:text-[#79DB8D] text-sm">₹{displayRate}<span className="text-[10px] text-[var(--text-muted)] font-normal">/hr</span></span>
-                <span className="text-[10px] text-[var(--text-muted)] font-mono">{zone.distanceKm} km</span>
-              </div>
-
-              <div className="mt-2 pt-1.5 border-t border-[var(--border-color)] text-[10px] text-[var(--text-secondary)] flex items-center justify-between">
-                <span className="truncate">{zone.competitionLevel ? zone.competitionLevel.split(' ')[0] + ' Drivers' : `Surge ${zone.multiplier || zone.effectiveSurge}`}</span>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleStartNavigation(zone);
-                  }}
-                  className="text-[#15803D] dark:text-[#79DB8D] hover:underline font-semibold flex items-center gap-0.5 shrink-0"
-                >
-                  Route <ArrowUpRight className="w-3 h-3" />
-                </button>
+              <div className="flex items-baseline justify-between">
+                <span className="text-sm font-heading font-bold text-[#15803D] dark:text-[#79DB8D]">₹{displayRate}/h</span>
+                <span className="text-[10px] font-mono text-[var(--text-muted)]">{zone.distanceKm} km</span>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* Navigation Modal / Route Details Drawer */}
-      {activeRouteModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[var(--surface-card)] border border-[var(--border-color)] rounded-xl max-w-md w-full p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
-            
-            <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
+      {/* Selected Zone Deep-Dive Details */}
+      <div className="card-panel p-4 sm:p-5 space-y-4">
+        <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className={`p-2 rounded-lg ${currentDemandStyle.bg}`}>
+              <Compass className="w-4 h-4" />
+            </div>
+            <div>
               <div className="flex items-center gap-2">
-                <div className="p-2 rounded bg-[#15803D]/10 text-[#15803D] dark:text-[#79DB8D]">
-                  <Navigation className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-heading font-bold text-base text-[var(--text-primary)]">
-                    Navigation Route: {activeRouteModal.name}
-                  </h3>
-                  <p className="text-xs text-[var(--text-muted)]">Opening turn-by-turn route on Google Maps</p>
-                </div>
+                <h4 className="font-heading font-bold text-base text-[var(--text-primary)]">{currentZone.name}</h4>
+                <span className={`text-[9px] px-2 py-0.5 rounded ${currentDemandStyle.badge}`}>
+                  {currentZone.demand?.toUpperCase()} DEMAND
+                </span>
               </div>
-              <button
-                onClick={() => setActiveRouteModal(null)}
-                className="p-1 rounded hover:bg-[var(--surface-low)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all"
-              >
-                <X className="w-5 h-5" />
+              <p className="text-xs text-[var(--text-muted)]">{currentZone.distanceKm} km from current location</p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setActiveRouteModal(currentZone)}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#15803D] hover:bg-[#166534] text-white text-xs font-semibold transition-all active:scale-95 shadow"
+          >
+            <Navigation className="w-3.5 h-3.5" />
+            <span>Route</span>
+          </button>
+        </div>
+
+        {/* Key Metrics Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+          <div className="bg-[var(--surface-low)] p-2.5 rounded-lg border border-[var(--border-color)]">
+            <span className="text-[10px] font-mono font-semibold text-[var(--text-muted)] block uppercase">Est. Hourly Earnings</span>
+            <span className="text-base font-heading font-bold text-[#15803D] dark:text-[#79DB8D]">₹{currentZone.expectedRatePerHour || currentZone.ratePerHour}/hr</span>
+          </div>
+
+          <div className="bg-[var(--surface-low)] p-2.5 rounded-lg border border-[var(--border-color)]">
+            <span className="text-[10px] font-mono font-semibold text-[var(--text-muted)] block uppercase">Surge Multiplier</span>
+            <span className="text-base font-heading font-bold text-[var(--text-primary)]">{currentZone.effectiveSurge || currentZone.multiplier || '1.4x'}</span>
+          </div>
+
+          <div className="bg-[var(--surface-low)] p-2.5 rounded-lg border border-[var(--border-color)]">
+            <span className="text-[10px] font-mono font-semibold text-[var(--text-muted)] block uppercase">Active Drivers</span>
+            <span className="text-base font-heading font-bold text-[var(--text-primary)]">{currentZone.activeDrivers || 14} drivers</span>
+          </div>
+
+          <div className="bg-[var(--surface-low)] p-2.5 rounded-lg border border-[var(--border-color)]">
+            <span className="text-[10px] font-mono font-semibold text-[var(--text-muted)] block uppercase">Driver Competition</span>
+            <span className="text-base font-heading font-bold text-[#15803D] dark:text-[#79DB8D] capitalize">{currentZone.competitionLevel || 'Low'}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation Route Details Modal */}
+      {activeRouteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-[#111318] max-w-md w-full rounded-xl border border-[#272A31] p-5 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#272A31] pb-3">
+              <div className="flex items-center gap-2">
+                <Navigation className="w-5 h-5 text-[#79DB8D]" />
+                <h3 className="font-heading font-bold text-base text-white">Google Maps Route Details</h3>
+              </div>
+              <button onClick={() => setActiveRouteModal(null)} className="p-1 rounded text-slate-400 hover:text-white">
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Smart Route Highlights */}
-            <div className="space-y-2.5">
-              <div className="bg-[var(--surface-low)] rounded p-3 border border-[var(--border-color)] flex items-center justify-between text-xs">
-                <span className="text-[var(--text-muted)] font-medium flex items-center gap-1.5">
-                  <MapPin className="w-4 h-4 text-[#15803D]" /> Distance & Time
-                </span>
-                <span className="font-mono font-semibold text-[var(--text-primary)]">
-                  {activeRouteModal.distanceKm} km ({activeRouteModal.estTravelTimeMin || Math.round(activeRouteModal.distanceKm * 3 + 2)} mins travel)
-                </span>
-              </div>
-
-              <div className="bg-[var(--surface-low)] rounded p-3 border border-[var(--border-color)] flex items-center justify-between text-xs">
-                <span className="text-[var(--text-muted)] font-medium flex items-center gap-1.5">
-                  <Gauge className="w-4 h-4 text-[#15803D]" /> Projected Rate / Surge
-                </span>
-                <span className="font-mono font-bold text-[#15803D] dark:text-[#79DB8D]">
-                  ₹{activeRouteModal.expectedRatePerHour || activeRouteModal.ratePerHour}/hr ({activeRouteModal.effectiveSurge || activeRouteModal.multiplier || '1.4x'})
-                </span>
-              </div>
-
-              <div className="bg-[var(--surface-low)] rounded p-3 border border-[var(--border-color)] flex items-center justify-between text-xs">
-                <span className="text-[var(--text-muted)] font-medium flex items-center gap-1.5">
-                  <Compass className="w-4 h-4 text-[#15803D]" /> Driver Competition
-                </span>
-                <span className="font-semibold text-[var(--text-primary)]">
-                  {activeRouteModal.competitionLevel || 'Low Driver Density'}
-                </span>
-              </div>
-
-              {peakTimeAnalysis && (
-                <div className="bg-[var(--surface-low)] rounded p-3 border border-[var(--border-color)] flex items-center justify-between text-xs">
-                  <span className="text-[var(--text-muted)] font-medium flex items-center gap-1.5">
-                    <Clock className="w-4 h-4 text-[#15803D]" /> Optimal Shift Window
-                  </span>
-                  <span className="font-semibold text-[var(--text-primary)]">
-                    {peakTimeAnalysis.windowName}
-                  </span>
+            <div className="space-y-3 text-xs text-slate-300">
+              <div className="p-3 rounded-lg bg-[#1A1D23] border border-[#272A31] space-y-1.5">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Origin:</span>
+                  <span className="font-semibold text-white">{userLocation.name}</span>
                 </div>
-              )}
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Destination:</span>
+                  <span className="font-semibold text-emerald-400">{activeRouteModal.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Distance & Time:</span>
+                  <span className="font-semibold text-white">{activeRouteModal.distanceKm} km (~{Math.round(activeRouteModal.distanceKm * 3.5 + 4)} mins)</span>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-lg bg-[#15803D]/10 border border-[#15803D]/30 text-emerald-400 text-xs flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 shrink-0" />
+                <span>Low competition route — Projected yield ₹{activeRouteModal.expectedRatePerHour || activeRouteModal.ratePerHour}/hr.</span>
+              </div>
             </div>
 
-            {/* Modal Actions */}
-            <div className="pt-2 flex items-center gap-3">
-              <button
-                onClick={() => openGoogleMapsRoute(activeRouteModal)}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded bg-[#15803D] hover:bg-[#166534] text-white font-semibold text-xs active:scale-95 transition-all shadow-md"
-              >
-                <ExternalLink className="w-4 h-4" /> Launch Google Maps Navigation
-              </button>
+            <div className="grid grid-cols-2 gap-3 pt-2">
               <button
                 onClick={() => setActiveRouteModal(null)}
-                className="px-4 py-2.5 rounded bg-[var(--surface-low)] hover:bg-[var(--border-color)] text-[var(--text-primary)] font-semibold text-xs transition-all"
+                className="py-2.5 rounded-lg border border-[#272A31] bg-[#1A1D23] hover:bg-[#272A31] text-slate-300 font-semibold text-xs transition"
               >
                 Close
               </button>
+              <button
+                onClick={() => {
+                  handleOpenGoogleMapsRoute(activeRouteModal.name);
+                  setActiveRouteModal(null);
+                }}
+                className="py-2.5 rounded-lg bg-[#15803D] hover:bg-[#166534] text-white font-bold text-xs transition flex items-center justify-center gap-1.5 shadow"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Open in Google Maps</span>
+              </button>
             </div>
-
           </div>
         </div>
       )}
