@@ -2,17 +2,28 @@
 
 Submission for the GigShield Hackathon
 
+![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-6.0-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![NodeJS](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![Express](https://img.shields.io/badge/Express.js-4.21-000000?style=for-the-badge&logo=express&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-3.4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
+![Vercel](https://img.shields.io/badge/Vercel-Deployed-000000?style=for-the-badge&logo=vercel&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-3-003B57?style=for-the-badge&logo=sqlite&logoColor=white)
+![Groq](https://img.shields.io/badge/Groq_Llama3.3-70B-F05032?style=for-the-badge&logo=openai&logoColor=white)
+
 ## Problem Statement Chosen
 **Domain:** GigShield  
 **Problem Statement:** Proactive AI Copilot and Rights Advisor for Gig-Workers to optimize shift earnings, evaluate order profitability, protect health, and prevent exploitation.
 
-## Team
+## Team & About the Developers
 **Team Name:** Infinity Loopers  
 
-### 👨‍💻 Developers & Team
-- **Tushar Jain** (Lead Developer & Architect) — 🌐 Website: [tusharjain.in](https://tusharjain.in) | GitHub: [@Tusharjain-19](https://github.com/Tusharjain-19)
-- **Ayush Kumar** (Full Stack & AI Integration)
-- **Syed Ather** (UI/UX & Frontend Specialist)
+### 👨‍💻 Developers:
+- **Tushar Jain** (Lead Developer & Architect) — [Website: tusharjain.in](https://tusharjain.in) | [GitHub: @Tusharjain-19](https://github.com/Tusharjain-19)
+- **Ayush Kumar** (Team Member & Contributor)
+- **Syed Ather** (Team Member & Contributor)
+
+---
 
 ## Our Solution
 GigPilot AI is a proactive, real-time companion application built specifically for delivery riders and gig workers. Instead of merely logging past trips, GigPilot AI analyzes live traffic, weather surges, and driver density to guide workers to high-yield hotspots before demand shifts occur. It includes an **AI Screenshot OCR Profit Analyzer** that parses uploaded order slips to calculate true net income after fuel and idling delays, protecting workers from underpaid orders. Additionally, it tracks continuous driving hours with **Burnout Guardian** and offers multilingual AI rights advisory.
@@ -38,6 +49,7 @@ A rule-backed hybrid approach ensures zero-latency deterministic decisioning dur
 ● **Backend:** Node.js, Express.js, Axios, Dotenv  
 ● **AI/ML:** Groq Llama 3.3-70B LLM, Tesseract OCR Engine  
 ● **Database/Storage:** SQLite3 + Dual In-Memory Store  
+● **Deployment & Hosting:** Vercel / Node Server  
 ● **Other tools/APIs:** TomTom Live Traffic & Routing API, OpenWeatherMap API, Google Maps Directions API  
 
 ## Features Implemented
