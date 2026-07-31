@@ -8,7 +8,11 @@ Submission for the GigShield Hackathon
 
 ## Team
 **Team Name:** Infinity Loopers  
-**Team Members:** Ayush Kumar, Syed Ather, Tushar Jain
+
+### 👨‍💻 Developers & Team
+- **Tushar Jain** (Lead Developer & Architect) — 🌐 Website: [tusharjain.in](https://tusharjain.in) | GitHub: [@Tusharjain-19](https://github.com/Tusharjain-19)
+- **Ayush Kumar** (Full Stack & AI Integration)
+- **Syed Ather** (UI/UX & Frontend Specialist)
 
 ## Our Solution
 GigPilot AI is a proactive, real-time companion application built specifically for delivery riders and gig workers. Instead of merely logging past trips, GigPilot AI analyzes live traffic, weather surges, and driver density to guide workers to high-yield hotspots before demand shifts occur. It includes an **AI Screenshot OCR Profit Analyzer** that parses uploaded order slips to calculate true net income after fuel and idling delays, protecting workers from underpaid orders. Additionally, it tracks continuous driving hours with **Burnout Guardian** and offers multilingual AI rights advisory.
