@@ -19,9 +19,9 @@ Submission for the GigShield Hackathon
 **Team Name:** Infinity Loopers  
 
 ### 👨‍💻 Developers:
-- **Tushar Jain** (Lead Developer & Architect) — [Website: tusharjain.in](https://tusharjain.in) | [GitHub: @Tusharjain-19](https://github.com/Tusharjain-19)
-- **Ayush Kumar** (Team Member & Contributor)
-- **Syed Ather** (Team Member & Contributor)
+- **Tushar Jain**  — [Website: tusharjain.in](https://tusharjain.in) | [GitHub: @Tusharjain-19](https://github.com/Tusharjain-19)
+- **Ayush Kumar** (Contributor)
+- **Syed Ather** (Contributor)
 
 ---
 
