@@ -88,10 +88,10 @@ If your project needs an API key to run, make sure `.env.example` is up to date 
 
 ### Environment Variables (.env)
 ```env
-GROQ_API_KEY=gsk_fakeKeyForDemoToOverwriteLater
+GROQ_API_KEY=your_groq_api_key_here
 PORT=5000
-TOMTOM_API_KEY=4b8OzSifugFokZzfNvdIh1ERzpSZDBjs
-WEATHER_API_KEY=e50ebac0154d24917a9ae877f03a0411
+TOMTOM_API_KEY=your_tomtom_api_key_here
+WEATHER_API_KEY=your_openweather_api_key_here
 ```
 
 ---

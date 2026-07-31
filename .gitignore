@@ -12,3 +12,5 @@ backend.md
 frontend.md
 *.timestamp-*.mjs
 server/database.sqlite
+generate_ppt.py
+*.pptx
