@@ -175,7 +175,7 @@ export const api = {
     } catch (err) {
       const q = (question || '').toLowerCase();
       if (q.includes('petrol') || q.includes('fuel') || q.includes('diesel') || q.includes('gas') || q.includes('price')) {
-        return { answer: "Current petrol price in Bangalore is ₹102.86/L (Diesel: ₹88.94/L, EV Charging: ₹18/kWh). Vehicle running cost estimate: ₹6.0/km for 2-wheeler, ₹9.5/km for cab." };
+        return { answer: "Current petrol price in Bangalore is ₹110.93 – ₹111.68/L (Diesel: ₹94.50/L, EV Charging: ₹18/kWh). Vehicle running cost estimate: ₹6.50/km for 2-wheeler, ₹10.20/km for cab." };
       }
       if (q.includes('spend') || q.includes('spent') || q.includes('expense') || q.includes('cost')) {
         return { answer: "Today's estimated vehicle fuel expenses: ₹144 (across completed deliveries). Net earnings today: ₹680." };

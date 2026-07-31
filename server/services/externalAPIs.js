@@ -3,12 +3,12 @@
 // All functions gracefully fall back to realistic simulated data if no API key is provided
 
 // ─── REAL BANGALORE FUEL ECONOMICS ─────────────────────────
-// Petrol price Bangalore July 2026: ₹102.86/L
+// Petrol price Bangalore July 2026: ₹110.93 - ₹111.68/L (avg ₹111.30/L)
 // Average delivery bike mileage: 45 km/L
-// Real fuel cost per km: ₹2.29/km
-export const FUEL_PRICE_PER_LITER = 102.86;
+// Real fuel cost per km: ₹2.47/km
+export const FUEL_PRICE_PER_LITER = 111.30;
 export const BIKE_MILEAGE_KM_PER_L = 45;
-export const FUEL_COST_PER_KM = parseFloat((FUEL_PRICE_PER_LITER / BIKE_MILEAGE_KM_PER_L).toFixed(2)); // ₹2.29
+export const FUEL_COST_PER_KM = parseFloat((FUEL_PRICE_PER_LITER / BIKE_MILEAGE_KM_PER_L).toFixed(2)); // ₹2.47
 
 // ─── WEATHER API (OpenWeatherMap) ───────────────────────────
 export async function fetchWeather(lat, lng, apiKey) {

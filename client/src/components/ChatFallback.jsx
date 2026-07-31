@@ -62,7 +62,7 @@ export default function ChatFallback() {
       if (q.includes('spend') || q.includes('spent') || q.includes('expense') || q.includes('cost')) {
         fallbackText = "Today's estimated vehicle fuel expenses: ₹144 (across 6 completed deliveries). Net profit after fuel: ₹385.";
       } else if (q.includes('petrol') || q.includes('fuel') || q.includes('diesel') || q.includes('price')) {
-        fallbackText = "Current petrol price in Bangalore is ₹102.86/L. Vehicle running cost estimate: ₹6.0/km for 2-wheeler, ₹9.5/km for cab.";
+        fallbackText = "Current petrol price in Bangalore is ₹110.93 – ₹111.68/L. Vehicle running cost estimate: ₹6.50/km for 2-wheeler, ₹10.20/km for cab.";
       }
       setMessages(prev => [...prev, { sender: 'bot', text: fallbackText }]);
     } finally {

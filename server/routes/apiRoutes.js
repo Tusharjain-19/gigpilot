@@ -253,7 +253,7 @@ router.post('/chat', async (req, res) => {
   // Petrol / Fuel / Diesel / Gas / Price intent (checked BEFORE generic keywords)
   if (lowerQuery.includes('petrol') || lowerQuery.includes('fuel') || lowerQuery.includes('diesel') || lowerQuery.includes('gas') || (lowerQuery.includes('price') && !lowerQuery.includes('earn'))) {
     return res.json({
-      answer: `Current petrol price in Bangalore is ₹102.86/L (Diesel: ₹88.94/L, EV Charging: ₹18/kWh). Running cost estimate: ₹6.0/km for 2-wheeler, ₹9.5/km for cab. Always factor fuel cost into order decisions!`
+      answer: `Current petrol price in Bangalore is ₹110.93 – ₹111.68/L (Diesel: ₹94.50/L, EV Charging: ₹18/kWh). Vehicle running cost estimate: ₹6.50/km for 2-wheeler, ₹10.20/km for cab. Always factor fuel cost into order decisions!`
     });
   }
 

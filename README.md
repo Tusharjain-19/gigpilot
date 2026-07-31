@@ -28,7 +28,7 @@ GigPilot AI is a proactive, real-time companion application designed specificall
 ● **What it does in your app:**
 1. **Screenshot OCR Profit/Loss Detector**: Parses order slip screenshots to calculate base fuel cost, idling traffic penalties, profit margin %, and real hourly rate.
 2. **Opportunity Radar**: Sweeps 360 degrees around worker coordinates to recommend optimal shift locations based on low competition and high surge rates.
-3. **Multilingual Copilot Q&A**: Answers worker queries regarding fuel prices (₹102.86/L), shift spending, earnings summaries, and fair fare benchmarks.
+3. **Multilingual Copilot Q&A**: Answers worker queries regarding fuel prices (₹110.93–₹111.68/L), shift spending, earnings summaries, and fair fare benchmarks.
 
 ● **Why we chose this approach:**
 A rule-backed hybrid approach ensures zero-latency deterministic decisioning during live navigation while leveraging LLMs and OCR for natural language assistance and document vision. This eliminates black-box hallucinations and guarantees exact financial accuracy for gig workers.
@@ -57,7 +57,7 @@ A rule-backed hybrid approach ensures zero-latency deterministic decisioning dur
 #### **Bonus Features Attempted:**
 - [x] **Multilingual Support**: Supports 7 regional Indian languages (English, Hindi, Kannada, Bengali, Marathi, Telugu, Tamil).
 - [x] **Live TomTom Traffic Surcharge**: Integrates TomTom Traffic Flow API to add idling fuel penalties to congested order routes.
-- [x] **Smart Chatbot Intent Engine**: Answers petrol/fuel rate queries (`₹102.86/L`), daily fuel expenses, and shift summaries accurately.
+- [x] **Smart Chatbot Intent Engine**: Answers petrol/fuel rate queries (`₹110.93–₹111.68/L`), daily fuel expenses, and shift summaries accurately.
 - [x] **Dark / Light Aesthetic Design**: Custom human-centric aesthetic brand mark and theme toggle.
 
 ---
