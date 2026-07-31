@@ -177,7 +177,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#070A0F] text-slate-900 dark:text-slate-100 pb-20 transition-colors duration-300">
+    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] pb-20 transition-colors duration-300">
       {/* Header */}
       <Header
         worker={dashboardData?.worker}
