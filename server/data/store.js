@@ -9,10 +9,10 @@ export const worker = {
   ordersRejected: 2,
   hoursActiveToday: 2.8,
   location: {
-    lat: 12.9166,
-    lng: 77.6101,
+    lat: 12.9410,
+    lng: 77.5655,
     city: "Bangalore",
-    area: "BTM Layout 2nd Stage"
+    area: "Basavanagudi (near BMSCE)"
   },
   weather: {
     temp: "26°C",
@@ -36,12 +36,13 @@ export const worker = {
 };
 
 export const baseZones = [
-  { id: "z1", name: "Koramangala", demand: "high", ratePerHour: 165, distanceKm: 1.8, multiplier: "1.3x", activeDrivers: 14, coords: { x: 35, y: 40 } },
-  { id: "z2", name: "Indiranagar", demand: "medium", ratePerHour: 135, distanceKm: 3.2, multiplier: "1.15x", activeDrivers: 22, coords: { x: 65, y: 25 } },
-  { id: "z3", name: "HSR Layout", demand: "high", ratePerHour: 155, distanceKm: 2.4, multiplier: "1.25x", activeDrivers: 18, coords: { x: 45, y: 70 } },
-  { id: "z4", name: "MG Road", demand: "medium", ratePerHour: 120, distanceKm: 4.5, multiplier: "1.1x", activeDrivers: 30, coords: { x: 75, y: 55 } },
-  { id: "z5", name: "Whitefield", demand: "low", ratePerHour: 85, distanceKm: 8.1, multiplier: "1.0x", activeDrivers: 45, coords: { x: 88, y: 80 } },
-  { id: "z6", name: "Jayanagar", demand: "high", ratePerHour: 150, distanceKm: 3.8, multiplier: "1.2x", activeDrivers: 12, coords: { x: 20, y: 65 } }
+  { id: "z7", name: "Basavanagudi (BMSCE)", demand: "high", ratePerHour: 180, distanceKm: 0.4, multiplier: "1.35x", activeDrivers: 8, coords: { x: 30, y: 50 } },
+  { id: "z1", name: "Koramangala", demand: "high", ratePerHour: 165, distanceKm: 5.1, multiplier: "1.3x", activeDrivers: 14, coords: { x: 55, y: 40 } },
+  { id: "z2", name: "Indiranagar", demand: "medium", ratePerHour: 135, distanceKm: 7.5, multiplier: "1.15x", activeDrivers: 22, coords: { x: 75, y: 25 } },
+  { id: "z3", name: "HSR Layout", demand: "high", ratePerHour: 155, distanceKm: 7.8, multiplier: "1.25x", activeDrivers: 18, coords: { x: 65, y: 70 } },
+  { id: "z4", name: "MG Road", demand: "medium", ratePerHour: 120, distanceKm: 4.2, multiplier: "1.1x", activeDrivers: 30, coords: { x: 50, y: 30 } },
+  { id: "z5", name: "Whitefield", demand: "low", ratePerHour: 85, distanceKm: 14.1, multiplier: "1.0x", activeDrivers: 45, coords: { x: 90, y: 80 } },
+  { id: "z6", name: "Jayanagar", demand: "high", ratePerHour: 160, distanceKm: 1.8, multiplier: "1.25x", activeDrivers: 10, coords: { x: 35, y: 65 } }
 ];
 
 export const mockStores = [

@@ -3,6 +3,7 @@ import { baseZones } from '../data/store.js';
 
 // Coordinates for standard zones (Bangalore default centers)
 const zoneCoordinates = {
+  z7: { lat: 12.9410, lng: 77.5655, name: "Basavanagudi (BMSCE)" },
   z1: { lat: 12.9352, lng: 77.6245, name: "Koramangala" },
   z2: { lat: 12.9784, lng: 77.6408, name: "Indiranagar" },
   z3: { lat: 12.9121, lng: 77.6446, name: "HSR Layout" },
