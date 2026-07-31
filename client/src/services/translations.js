@@ -33,7 +33,13 @@ export const translations = {
     chatDesc: "Ask natural language questions about your shift",
     welcomeChat: "Hello Rajesh! I am watching live order density & your GigDNA scores. Ask me anything about earnings, zones, or fatigue.",
     askQuestion: "Ask Copilot a question...",
-    thinking: "Thinking..."
+    thinking: "Thinking...",
+    dashboardTab: "Dashboard",
+    radarTab: "Radar Map",
+    ocrTab: "OCR Predictor",
+    keysTab: "API Keys",
+    missionsTab: "Missions",
+    chatTab: "Copilot Q&A"
   },
   hi: {
     shiftEarnings: "आज की कुल कमाई",
@@ -44,14 +50,14 @@ export const translations = {
     accepted: "स्वीकार किया गया",
     rejected: "अस्वीकार किया गया",
     orders: "ऑर्डर",
-    viewRadar: "अवसर रडार मानचित्र देखें",
+    viewRadar: "अवसर रडาร मानचित्र देखें",
     surgeActive: "कोरामंगला सर्ज सक्रिय है",
     estRate: "₹245/घंटा अनुमानित",
     openRadar: "रडार खोलें →",
     radarTitle: "अवसर रडार",
     radarDesc: "लाइव मांग घनत्व और वास्तविक समय दर हॉटस्पॉट",
     gpsSweep: "जीपीएस स्वीप",
-    aiRecommendation: "एआई सिफारिश",
+    aiRecommendation: "एइ सिफारिश",
     route: "मार्ग",
     you: "आप",
     reliability: "विश्वसनीयता",
@@ -68,7 +74,13 @@ export const translations = {
     chatDesc: "अपनी शिफ्ट के बारे में प्राकृतिक भाषा में प्रश्न पूछें",
     welcomeChat: "नमस्ते राजेश! मैं लाइव ऑर्डर घनत्व और आपके GigDNA स्कोर की निगरानी कर रहा हूँ। कमाई, ज़ोन या थकान के बारे में कुछ भी पूछें।",
     askQuestion: "कोपायलट से प्रश्न पूछें...",
-    thinking: "सोच रहा है..."
+    thinking: "सोच रहा है...",
+    dashboardTab: "डैशबोर्ड",
+    radarTab: "रडार मानचित्र",
+    ocrTab: "ओसीआर विश्लेषक",
+    keysTab: "एपीआई कुंजी",
+    missionsTab: "कार्य / लक्ष्य",
+    chatTab: "कोपायलट चैट"
   },
   kn: {
     shiftEarnings: "ಇಂದಿನ ಶಿಫ್ಟ್ ಗಳಿಕೆ",
@@ -90,7 +102,7 @@ export const translations = {
     route: "ಮಾರ್ಗ",
     you: "ನೀವು",
     reliability: "ವಿಶ್ವಾಸಾರ್ಹತೆ",
-    safety: "सुरಕ್ಷತೆ",
+    safety: "ಸುರಕ್ಷತೆ",
     efficiency: "ದಕ್ಷತೆ",
     incomeStability: "ಆದಾಯ ಸ್ಥಿರತೆ",
     customerHappiness: "ಗ್ರಾಹಕ ಸಂತೋಷ",
@@ -103,7 +115,13 @@ export const translations = {
     chatDesc: "ನಿಮ್ಮ ಶಿಫ್ಟ್ ಬಗ್ಗೆ ಪ್ರಶ್ನೆಗಳನ್ನು ಕೇಳಿ",
     welcomeChat: "ಹಲೋ ರಾಜೇಶ್! ನಾನು ಲೈವ್ ಆರ್ಡರ್ ಸಾಂದ್ರತೆ ಮತ್ತು ನಿಮ್ಮ GigDNA ಸ್ಕೋರ್‌ಗಳನ್ನು ಗಮನಿಸುತ್ತಿದ್ದೇನೆ. ಗಳಿಕೆ, ವಲಯಗಳು ಅಥವಾ ಆಯಾಸದ ಬಗ್ಗೆ ಕೇಳಿ.",
     askQuestion: "ಕೋಪೈಲಟ್‌ಗೆ ಪ್ರಶ್ನೆ ಕೇಳಿ...",
-    thinking: "ಯೋಚಿಸುತ್ತಿದೆ..."
+    thinking: "ಯೋಚಿಸುತ್ತಿದೆ...",
+    dashboardTab: "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+    radarTab: "ರಾಡಾರ್ ನಕ್ಷೆ",
+    ocrTab: "ಒಸಿಆರ್ ಪ್ರೆಡಿಕ್ಟರ್",
+    keysTab: "ಕೀಲಿಗಳು",
+    missionsTab: "ಮಿಷನ್‌ಗಳು",
+    chatTab: "ಕೋಪೈಲಟ್ ಚಾಟ್"
   },
   bn: {
     shiftEarnings: "আজকের শিফট উপার্জন",
@@ -119,7 +137,7 @@ export const translations = {
     estRate: "₹২৪৫/ঘণ্টা আনুমানিক",
     openRadar: "রাডার খুলুন →",
     radarTitle: "সুযোগ রাডার",
-    radarDesc: "লাইভ চাহিদার ঘনত্ব এবং রিয়েল-টাইม রেট হটস্পট",
+    radarDesc: "লাইভ চাহিদার ঘনত্ব এবং রিয়েল-টাইম রেট হটস্পট",
     gpsSweep: "জিপিএস সুইপ",
     aiRecommendation: "এআই সুপারিশ",
     route: "রুট",
@@ -129,7 +147,7 @@ export const translations = {
     efficiency: "দক্ষতা",
     incomeStability: "আয় স্থিতিশীলতা",
     customerHappiness: "গ্রাহক সন্তোষ",
-    compositeScore: "सामग्रिक स्कोर",
+    compositeScore: "সামগ্রিক স্কোর",
     gigDnaCardTitle: "GigDNA মূল সূচক",
     gigDnaCardDesc: "কাজের মান এবং নিরাপত্তা পরামিতি স্কোর",
     ocrPredictor: "ওসিআর প্রেডিক্টর",
@@ -138,7 +156,13 @@ export const translations = {
     chatDesc: "আপনার শিফট সম্পর্কে স্বাভাবিক ভাষায় প্রশ্ন জিজ্ঞাসা করুন",
     welcomeChat: "হ্যালো রাজেশ! আমি লাইভ অর্ডার ঘনত্ব এবং আপনার GigDNA স্কোর দেখছি। উপার্জন, জোন বা ক্লান্তি সম্পর্কে যেকোনো কিছু জিজ্ঞাসা করুন।",
     askQuestion: "কোপাইলটকে জিজ্ঞাসা করুন...",
-    thinking: "ভাবছে..."
+    thinking: "ভাবছে...",
+    dashboardTab: "ড্যাশবোর্ড",
+    radarTab: "রাডার ম্যাপ",
+    ocrTab: "ওসিআর বিশ্লেষক",
+    keysTab: "চাবি তালিকা",
+    missionsTab: "মিশনসমূহ",
+    chatTab: "কোপাইলট চ্যাট"
   },
   mr: {
     shiftEarnings: "आजची एकूण कमाई",
@@ -171,9 +195,15 @@ export const translations = {
     screenshotUpload: "विश्लेषण करण्यासाठी स्क्रीनशॉट अपलोड करा",
     chatTitle: "कोपायलट प्रश्नोत्तर सहाय्यक",
     chatDesc: "तुमच्या शिफ्टबद्दल प्रश्न विचारा",
-    welcomeChat: "नमस्कार राजेश! मी थेट ऑर्डर घनता आणि तुमचे GigDNA गुण पाहत आहे. कमाई, झोन किंवा थकव्याबद्दल काहीही विचारा.",
+    welcomeChat: "नमस्कार राजेश! मी थेट आदेश घनता आणि तुमचे GigDNA गुण पाहत आहे. कमाई, झोन किंवा थकव्याबद्दल काहीही विचारा.",
     askQuestion: "कोपायलटला विचारा...",
-    thinking: "विचार करत आहे..."
+    thinking: "विचार करत आहे...",
+    dashboardTab: "डॅशबोर्ड",
+    radarTab: "रडार नकाशा",
+    ocrTab: "ओसीआर प्रेडिक्टर",
+    keysTab: "एपीआय की",
+    missionsTab: "ध्येय यादी",
+    chatTab: "कोपायलट गप्पा"
   },
   te: {
     shiftEarnings: "ఈరోజు షిఫ్ట్ సంపాదన",
@@ -208,7 +238,13 @@ export const translations = {
     chatDesc: "మీ షిఫ్ట్ గురించి ప్రశ్నలు అడగండి",
     welcomeChat: "హలో రాజేష్! నేను లైవ్ ఆర్డర్ సాంద్రత & మీ GigDNA స్కోర్‌లను గమనిస్తున్నాను. సంపాదన, జోన్లు లేదా అలసట గురించి ఏదైనా అడగండి.",
     askQuestion: "కోపైలట్ను ప్రశ్న అడగండి...",
-    thinking: "ఆలోచిస్తోంది..."
+    thinking: "ఆలోచిస్తోంది...",
+    dashboardTab: "డాష్‌బోర్డ్",
+    radarTab: "రాడార్ మ్యాప్",
+    ocrTab: "ఓసిఆర్ ప్రిడిక్టర్",
+    keysTab: "కీలు",
+    missionsTab: "లక్ష్యాలు",
+    chatTab: "కోపైలట్ చాట్"
   },
   ta: {
     shiftEarnings: "இன்றைய ஷிப்ட் வருவாய்",
@@ -243,6 +279,12 @@ export const translations = {
     chatDesc: "உங்கள் ஷிப்ட் பற்றி கேள்விகளைக் கேளுங்கள்",
     welcomeChat: "ஹலோ ராஜேஷ்! நேரடி ஆர்டர் அடர்த்தி மற்றும் உங்கள் GigDNA மதிப்பெண்களை நான் கண்காணிக்கிறேன். வருவாய், மண்டலங்கள் அல்லது சோர்வு பற்றி கேளுங்கள்.",
     askQuestion: "கோபிலாட்டிடம் கேள்வி கேளுங்கள்...",
-    thinking: "யோசிக்கிறது..."
+    thinking: "யோசிக்கிறது...",
+    dashboardTab: "டாஷ்போர்டு",
+    radarTab: "ரேடார் வரைபடம்",
+    ocrTab: "ஓசிஆர் கணிப்பான்",
+    keysTab: "விசைகள்",
+    missionsTab: "பணிகள்",
+    chatTab: "கோபிலாட் சாட்"
   }
 };

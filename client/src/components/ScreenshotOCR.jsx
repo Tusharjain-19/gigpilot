@@ -1,12 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, FileImage, Sparkles, CheckCircle2, XCircle, Fuel, Navigation, ShieldCheck, Car } from 'lucide-react';
 import { api } from '../services/api';
+import { translations } from '../services/translations';
 
 export default function ScreenshotOCR() {
   const [selectedPreset, setSelectedPreset] = useState('swiggy_high');
   const [trafficLevel, setTrafficLevel] = useState('moderate');
   const [isScanning, setIsScanning] = useState(false);
   const [result, setResult] = useState(null);
+  const [lang, setLang] = useState(window.__selectedLang || 'en');
+
+  useEffect(() => {
+    const handleLang = (e) => setLang(e.detail || 'en');
+    window.addEventListener('langChanged', handleLang);
+    return () => window.removeEventListener('langChanged', handleLang);
+  }, []);
 
   const presets = [
     { id: 'swiggy_high', title: 'Swiggy Dinner Order', payout: 165, distanceKm: 4.2, pickup: "Truffles, Koramangala", drop: "Sector 3, HSR Layout", badge: 'High Yield' },
@@ -46,6 +54,8 @@ export default function ScreenshotOCR() {
     handleParse(selectedPreset, t);
   };
 
+  const t = translations[lang] || translations.en;
+
   return (
     <div className="space-y-4 pb-20">
       {/* Header Banner */}
@@ -56,12 +66,12 @@ export default function ScreenshotOCR() {
           </div>
           <div>
             <h3 className="font-heading font-semibold text-base text-[#F4F4F5] tracking-tight flex items-center gap-2">
-              Screenshot OCR & Traffic Predictor
+              {t.ocrPredictor}
               <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-[#111318] text-[#79DB8D] border border-[#272A31]">
                 OCR PARSER
               </span>
             </h3>
-            <p className="text-xs text-[#A1A1AA]">Upload order slips or select platform screenshots to predict real profit after traffic delays</p>
+            <p className="text-xs text-[#A1A1AA]">{t.screenshotUpload}</p>
           </div>
         </div>
 

@@ -1,14 +1,25 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { LayoutDashboard, Radar, Trophy, MessageSquare, Upload, Key } from 'lucide-react';
+import { translations } from '../services/translations';
 
 export default function Navbar({ activeTab, setActiveTab }) {
+  const [lang, setLang] = useState(window.__selectedLang || 'en');
+
+  useEffect(() => {
+    const handleLang = (e) => setLang(e.detail || 'en');
+    window.addEventListener('langChanged', handleLang);
+    return () => window.removeEventListener('langChanged', handleLang);
+  }, []);
+
+  const t = translations[lang] || translations.en;
+
   const tabs = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'radar', label: 'Radar Map', icon: Radar, badge: 'LIVE' },
-    { id: 'ocr', label: 'OCR Predictor', icon: Upload },
-    { id: 'keys', label: 'API Keys', icon: Key },
-    { id: 'missions', label: 'Missions', icon: Trophy },
-    { id: 'chat', label: 'Copilot Q&A', icon: MessageSquare },
+    { id: 'dashboard', label: t.dashboardTab || 'Dashboard', icon: LayoutDashboard },
+    { id: 'radar', label: t.radarTab || 'Radar Map', icon: Radar, badge: 'LIVE' },
+    { id: 'ocr', label: t.ocrTab || 'OCR Predictor', icon: Upload },
+    { id: 'keys', label: t.keysTab || 'API Keys', icon: Key },
+    { id: 'missions', label: t.missionsTab || 'Missions', icon: Trophy },
+    { id: 'chat', label: t.chatTab || 'Copilot Q&A', icon: MessageSquare },
   ];
 
   return (
