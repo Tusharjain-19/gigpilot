@@ -57,7 +57,18 @@ export default function App() {
 
   useEffect(() => {
     loadAppData();
-  }, []);
+    
+    // Global listener for language changing to reload dashboard data translated if translation API is ready
+    window.__onLanguageChange = async (targetLang) => {
+      if (dashboardData) {
+        // Option to dynamically translate elements
+        console.log("Language changed to:", targetLang);
+      }
+    };
+    return () => {
+      window.__onLanguageChange = null;
+    };
+  }, [dashboardData]);
 
   // Simulate Order Trigger
   const handleSimulateOrder = async () => {

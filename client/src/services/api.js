@@ -232,5 +232,22 @@ export const api = {
         recommendation: { action, reason, confidence: 94 }
       };
     }
+  },
+
+  // POST /api/translate
+  async translateText(text, targetLang) {
+    try {
+      const res = await fetch(`${API_BASE}/translate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, targetLang })
+      });
+      if (!res.ok) throw new Error("API network error");
+      const data = await res.json();
+      return data.translatedText || text;
+    } catch (err) {
+      console.warn("Translation fallback:", err);
+      return text;
+    }
   }
 };

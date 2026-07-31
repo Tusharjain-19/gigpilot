@@ -137,30 +137,137 @@ router.get('/burnout', (req, res) => {
 });
 
 // 7. POST /api/chat
-router.post('/chat', (req, res) => {
+router.post('/chat', async (req, res) => {
   const { question } = req.body;
-  const query = (question || '').toLowerCase();
+  const query = (question || '').trim();
 
-  let answer = "";
-  if (query.includes('earn') || query.includes('money') || query.includes('today')) {
-    answer = `You've earned ₹${worker.earningsToday} today across ${worker.ordersAccepted} completed orders. Net profit margin is sitting at 74%.`;
-  } else if (query.includes('zone') || query.includes('where') || query.includes('go')) {
-    answer = `Head to Koramangala! Demand is High (1.4x surge) averaging ₹245/hr. It's only 1.8km from your location.`;
-  } else if (query.includes('break') || query.includes('fatigue') || query.includes('tired')) {
-    answer = worker.hoursActiveToday >= 4.0
-      ? `Yes! You've been active ${worker.hoursActiveToday.toFixed(1)} hours. Take a 15-minute break now to recover fatigue.`
-      : `You're currently at ${worker.hoursActiveToday.toFixed(1)} hours active. Energy levels good!`;
-  } else {
-    answer = `GigPilot AI recommends staying near Koramangala / Indiranagar corridor for maximum orders with >35% profit margin.`;
+  if (!query) {
+    return res.status(400).json({ error: "Empty query provided" });
   }
 
-  res.json({ answer });
+  const groqApiKey = process.env.GROQ_API_KEY;
+  if (!groqApiKey || groqApiKey.startsWith('gsk_fakeKey')) {
+    // Elegant fallback if Groq API is not configured or is using fake key placeholder
+    let answer = "";
+    const lowerQuery = query.toLowerCase();
+    if (lowerQuery.includes('earn') || lowerQuery.includes('money') || lowerQuery.includes('today')) {
+      answer = `You've earned ₹${worker.earningsToday} today across ${worker.ordersAccepted} completed orders. Net profit margin is sitting at 74%.`;
+    } else if (lowerQuery.includes('zone') || lowerQuery.includes('where') || lowerQuery.includes('go')) {
+      answer = `Head to Koramangala! Demand is High (1.4x surge) averaging ₹245/hr. It's only 1.8km from your location.`;
+    } else if (lowerQuery.includes('break') || lowerQuery.includes('fatigue') || lowerQuery.includes('tired')) {
+      answer = worker.hoursActiveToday >= 4.0
+        ? `Yes! You've been active ${worker.hoursActiveToday.toFixed(1)} hours. Take a 15-minute break now to recover fatigue.`
+        : `You're currently at ${worker.hoursActiveToday.toFixed(1)} hours active. Energy levels good!`;
+    } else {
+      answer = `[Local Mode] GigPilot AI recommends staying near Koramangala / Indiranagar corridor for maximum orders with >35% profit margin. Please configure GROQ_API_KEY in the server .env for full AI response capability.`;
+    }
+    return res.json({ answer });
+  }
+
+  try {
+    const messages = [
+      {
+        role: "system",
+        content: `You are GigPilot AI, a supportive, plain-language companion and rights advisor for gig-workers (delivery riders, cab drivers).
+Keep answers short, specific, supportive and numeric.
+Focus on safety, fairness, and worker dignity.
+Current shift context:
+- Earnings Today: ₹${worker.earningsToday}
+- Orders Accepted: ${worker.ordersAccepted}
+- Orders Rejected: ${worker.ordersRejected}
+- Hours Active Today: ${worker.hoursActiveToday.toFixed(1)}h
+- GigDNA scores: Reliability: ${worker.gigDNA.reliability}, Safety: ${worker.gigDNA.safety}, Efficiency: ${worker.gigDNA.efficiency}, Income Stability: ${worker.gigDNA.incomeStability}, Customer Happiness: ${worker.gigDNA.customerHappiness}`
+      },
+      {
+        role: "user",
+        content: query
+      }
+    ];
+
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${groqApiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        messages: messages,
+        temperature: 0.7,
+        max_tokens: 150
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Groq API returned ${response.status}: ${errorText}`);
+    }
+
+    const data = await response.json();
+    const answer = data.choices?.[0]?.message?.content || "No response content from Groq.";
+    res.json({ answer });
+  } catch (error) {
+    console.error("Groq API Call Error:", error);
+    res.json({
+      answer: `I had trouble connecting to my brain, but based on your local metrics: You have earned ₹${worker.earningsToday} today, and safety remains at ${worker.gigDNA.safety}/100. Rest if you feel fatigued!`
+    });
+  }
 });
 
 // 8. POST /api/order/ocr-parse
 router.post('/order/ocr-parse', (req, res) => {
   const result = parseOrderOCR(req.body);
   res.json(result);
+});
+
+// 9. POST /api/translate
+router.post('/translate', async (req, res) => {
+  const { text, targetLang } = req.body;
+  if (!text || !targetLang) {
+    return res.status(400).json({ error: "Missing text or targetLang parameters." });
+  }
+
+  const groqApiKey = process.env.GROQ_API_KEY;
+  if (!groqApiKey || groqApiKey.startsWith('gsk_fakeKey')) {
+    // local mockup response if API key is not ready
+    return res.json({ translatedText: `[${targetLang}] ${text}` });
+  }
+
+  try {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${groqApiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        messages: [
+          {
+            role: "system",
+            content: `You are a translator. Translate the given text into the language code specified: "${targetLang}". Translate precisely, preserving the tone. Return ONLY the translated string.`
+          },
+          {
+            role: "user",
+            content: text
+          }
+        ],
+        temperature: 0.3,
+        max_tokens: 100
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Groq API translate failed`);
+    }
+
+    const data = await response.json();
+    const translatedText = (data.choices?.[0]?.message?.content || text).trim();
+    res.json({ translatedText });
+  } catch (err) {
+    console.error("Translation API error:", err);
+    res.json({ translatedText: `[${targetLang}] ${text}` });
+  }
 });
 
 export default router;

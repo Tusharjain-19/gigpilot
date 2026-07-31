@@ -28,6 +28,27 @@ export default function Header({ worker, onSimulateOrder, isSimulating, darkMode
 
         {/* Right side controls */}
         <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Language Switcher */}
+          <div className="relative">
+            <select
+              value={window.__selectedLang || 'en'}
+              onChange={async (e) => {
+                const newLang = e.target.value;
+                window.__selectedLang = newLang;
+                if (window.__onLanguageChange) {
+                  window.__onLanguageChange(newLang);
+                }
+              }}
+              className="p-1 sm:p-1.5 rounded border border-slate-200 dark:border-[#272A31] bg-slate-100 dark:bg-[#1A1D23] text-slate-700 dark:text-[#A1A1AA] hover:text-[#15803D] dark:hover:text-[#79DB8D] text-xs transition-all focus:outline-none"
+            >
+              <option value="en">English</option>
+              <option value="kn">ಕನ್ನಡ (Kannada)</option>
+              <option value="hi">हिन्दी (Hindi)</option>
+              <option value="te">తెలుగు (Telugu)</option>
+              <option value="ta">தமிழ் (Tamil)</option>
+            </select>
+          </div>
+
           {/* Landing Page Button */}
           {onGoLanding && (
             <button
