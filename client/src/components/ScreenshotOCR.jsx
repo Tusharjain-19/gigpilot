@@ -109,20 +109,20 @@ export default function ScreenshotOCR() {
 
       {/* Traffic Level Selector */}
       <div className="card-panel p-4 space-y-3">
-        <div className="flex items-center justify-between text-xs font-semibold text-[#F4F4F5]">
+        <div className="flex items-center justify-between text-xs font-semibold text-[var(--text-primary)]">
           <span className="flex items-center gap-1.5">
-            <Car className="w-4 h-4 text-[#79DB8D]" /> Live Route Traffic Condition:
+            <Car className="w-4 h-4 text-[#15803D] dark:text-[#79DB8D]" /> Live Route Traffic Condition:
           </span>
-          <span className="text-[10px] font-mono uppercase text-[#A1A1AA]">
+          <span className="text-[10px] font-mono uppercase text-[var(--text-muted)]">
             {trafficLevel} TRAFFIC
           </span>
         </div>
 
         <div className="grid grid-cols-3 gap-2">
           {[
-            { id: 'low', label: 'Low Traffic', desc: 'No delay (1.0x fuel)', color: 'border-[#15803D] text-[#79DB8D] bg-[#15803D]/10' },
-            { id: 'moderate', label: 'Moderate Surge', desc: '+9 min delay (1.18x fuel)', color: 'border-[#C2410C] text-[#FFB59D] bg-[#C2410C]/10' },
-            { id: 'heavy', label: 'Heavy Gridlock', desc: '+18 min delay (1.38x fuel)', color: 'border-[#C2410C] text-[#FFB59D] bg-[#C2410C]/20' }
+            { id: 'low', label: 'Low Traffic', desc: 'No delay (1.0x fuel)', color: 'border-[#15803D] text-[#15803D] dark:text-[#79DB8D] bg-[#15803D]/10' },
+            { id: 'moderate', label: 'Moderate Surge', desc: '+9 min delay (1.18x fuel)', color: 'border-[#C2410C] text-[#C2410C] dark:text-[#FFB59D] bg-[#C2410C]/10' },
+            { id: 'heavy', label: 'Heavy Gridlock', desc: '+18 min delay (1.38x fuel)', color: 'border-[#C2410C] text-[#C2410C] dark:text-[#FFB59D] bg-[#C2410C]/20' }
           ].map((t) => (
             <button
               key={t.id}
@@ -130,7 +130,7 @@ export default function ScreenshotOCR() {
               className={`p-2.5 rounded border text-center transition-all ${
                 trafficLevel === t.id
                   ? `${t.color} font-semibold`
-                  : 'bg-[#111318] border-[#272A31] text-[#A1A1AA] hover:border-[#3F493F]'
+                  : 'bg-[var(--surface-low)] border-[var(--border-color)] text-[var(--text-muted)] hover:border-[#15803D]'
               }`}
             >
               <div className="text-xs">{t.label}</div>
@@ -143,8 +143,8 @@ export default function ScreenshotOCR() {
       {/* OCR Parsing Result & Traffic Profit Analysis */}
       {isScanning ? (
         <div className="card-panel p-8 text-center space-y-3">
-          <Sparkles className="w-6 h-6 text-[#79DB8D] animate-spin mx-auto" />
-          <p className="text-xs font-medium text-[#A1A1AA]">Scanning order slip & calculating traffic delay...</p>
+          <Sparkles className="w-6 h-6 text-[#15803D] dark:text-[#79DB8D] animate-spin mx-auto" />
+          <p className="text-xs font-medium text-[var(--text-muted)]">Scanning order slip & calculating traffic delay...</p>
         </div>
       ) : result && (
         <div className="card-panel p-4 sm:p-5 space-y-4">
@@ -152,14 +152,14 @@ export default function ScreenshotOCR() {
           {/* Recommendation Banner */}
           <div className={`p-4 rounded flex items-center justify-between gap-3 ${
             result.recommendation.action === 'ACCEPT'
-              ? 'bg-[#15803D] text-[#F4F4F5]'
-              : 'bg-[#C2410C] text-[#F4F4F5]'
+              ? 'bg-[#15803D] text-white'
+              : 'bg-[#C2410C] text-white'
           }`}>
             <div className="flex items-center gap-3">
               {result.recommendation.action === 'ACCEPT' ? (
-                <CheckCircle2 className="w-6 h-6 text-[#F4F4F5] shrink-0" />
+                <CheckCircle2 className="w-6 h-6 text-white shrink-0" />
               ) : (
-                <XCircle className="w-6 h-6 text-[#F4F4F5] shrink-0" />
+                <XCircle className="w-6 h-6 text-white shrink-0" />
               )}
               <div>
                 <span className="text-[9px] font-mono uppercase tracking-widest bg-black/30 px-2 py-0.5 rounded">
@@ -175,47 +175,47 @@ export default function ScreenshotOCR() {
           </div>
 
           {/* Reasoning */}
-          <div className="p-3 bg-[#111318] rounded border border-[#272A31] flex items-start gap-2.5">
-            <ShieldCheck className="w-4 h-4 text-[#79DB8D] shrink-0 mt-0.5" />
-            <p className="text-xs sm:text-sm font-medium text-[#F4F4F5]">
+          <div className="p-3 bg-[var(--surface-low)] rounded border border-[var(--border-color)] flex items-start gap-2.5">
+            <ShieldCheck className="w-4 h-4 text-[#15803D] dark:text-[#79DB8D] shrink-0 mt-0.5" />
+            <p className="text-xs sm:text-sm font-medium text-[var(--text-primary)]">
               "{result.recommendation.reason}"
             </p>
           </div>
 
           {/* Traffic Breakdown Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center">
-            <div className="bg-[#111318] p-2.5 rounded border border-[#272A31]">
-              <span className="text-[10px] font-mono text-[#A1A1AA] uppercase block mb-1">PAYOUT</span>
-              <span className="text-base font-heading font-bold text-[#F4F4F5]">₹{result.parsedOrder.payout}</span>
+            <div className="bg-[var(--surface-low)] p-2.5 rounded border border-[var(--border-color)]">
+              <span className="text-[10px] font-mono text-[var(--text-muted)] uppercase block mb-1">PAYOUT</span>
+              <span className="text-base font-heading font-bold text-[var(--text-primary)]">₹{result.parsedOrder.payout}</span>
             </div>
 
-            <div className="bg-[#111318] p-2.5 rounded border border-[#272A31]">
-              <span className="text-[10px] font-mono text-[#FFB59D] uppercase block mb-1">FUEL + TRAFFIC</span>
-              <span className="text-base font-heading font-bold text-[#FFB59D]">-₹{result.trafficAnalysis.adjustedFuelCost}</span>
+            <div className="bg-[var(--surface-low)] p-2.5 rounded border border-[var(--border-color)]">
+              <span className="text-[10px] font-mono text-[#C2410C] dark:text-[#FFB59D] uppercase block mb-1">FUEL + TRAFFIC</span>
+              <span className="text-base font-heading font-bold text-[#C2410C] dark:text-[#FFB59D]">-₹{result.trafficAnalysis.adjustedFuelCost}</span>
             </div>
 
-            <div className="bg-[#111318] p-2.5 rounded border border-[#272A31]">
-              <span className="text-[10px] font-mono text-[#A1A1AA] uppercase block mb-1">DURATION</span>
-              <span className="text-base font-heading font-bold text-[#F4F4F5]">{result.trafficAnalysis.totalTimeMin} m <span className="text-[10px] text-[#C2410C] font-normal">(+{result.trafficAnalysis.trafficDelayMin}m)</span></span>
+            <div className="bg-[var(--surface-low)] p-2.5 rounded border border-[var(--border-color)]">
+              <span className="text-[10px] font-mono text-[var(--text-muted)] uppercase block mb-1">DURATION</span>
+              <span className="text-base font-heading font-bold text-[var(--text-primary)]">{result.trafficAnalysis.totalTimeMin} m <span className="text-[10px] text-[#C2410C] font-normal">(+{result.trafficAnalysis.trafficDelayMin}m)</span></span>
             </div>
 
             <div className="bg-[#15803D]/10 p-2.5 rounded border border-[#15803D]/30">
-              <span className="text-[10px] font-mono text-[#79DB8D] uppercase block mb-1">NET PROFIT</span>
-              <span className="text-lg font-heading font-bold text-[#79DB8D]">₹{result.trafficAnalysis.adjustedProfit}</span>
+              <span className="text-[10px] font-mono text-[#15803D] dark:text-[#79DB8D] uppercase block mb-1">NET PROFIT</span>
+              <span className="text-lg font-heading font-bold text-[#15803D] dark:text-[#79DB8D]">₹{result.trafficAnalysis.adjustedProfit}</span>
             </div>
           </div>
 
           {/* Route details */}
-          <div className="bg-[#111318] p-3 rounded border border-[#272A31] space-y-1 text-xs">
-            <div className="flex items-center justify-between text-[#E4E4E7]">
-              <span className="text-[#A1A1AA]">Pickup:</span>
-              <span className="font-medium">{result.parsedOrder.pickupLocation}</span>
+          <div className="bg-[var(--surface-low)] p-3 rounded border border-[var(--border-color)] space-y-1 text-xs">
+            <div className="flex items-center justify-between text-[var(--text-secondary)]">
+              <span className="text-[var(--text-muted)]">Pickup:</span>
+              <span className="font-medium text-[var(--text-primary)]">{result.parsedOrder.pickupLocation}</span>
             </div>
-            <div className="flex items-center justify-between text-[#E4E4E7]">
-              <span className="text-[#A1A1AA]">Dropoff:</span>
-              <span className="font-medium">{result.parsedOrder.dropLocation}</span>
+            <div className="flex items-center justify-between text-[var(--text-secondary)]">
+              <span className="text-[var(--text-muted)]">Dropoff:</span>
+              <span className="font-medium text-[var(--text-primary)]">{result.parsedOrder.dropLocation}</span>
             </div>
-            <div className="text-[11px] text-[#A1A1AA] pt-1 border-t border-[#272A31] italic">
+            <div className="text-[11px] text-[var(--text-muted)] pt-1 border-t border-[var(--border-color)] italic">
               {result.trafficAnalysis.trafficDescription}
             </div>
           </div>
