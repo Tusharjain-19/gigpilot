@@ -1,0 +1,12 @@
+{
+  "name": "gigpilot-root",
+  "version": "1.0.0",
+  "description": "GigPilot AI - Proactive Gig Worker Copilot Monorepo",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix client run dev",
+    "dev:all": "concurrently \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
+    "build": "npm --prefix client run build",
+    "start:server": "npm --prefix server start"
+  }
+}

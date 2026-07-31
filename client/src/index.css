@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-primary: #F8FAFC;
+    --surface-card: #FFFFFF;
+    --surface-low: #F1F5F9;
+    --border-color: #E2E8F0;
+    --text-primary: #0F172A;
+    --text-secondary: #475569;
+    --text-muted: #64748B;
+  }
+  
+  .dark {
+    --bg-primary: #111318;
+    --surface-card: #1A1D23;
+    --surface-low: #14161C;
+    --border-color: #272A31;
+    --text-primary: #F4F4F5;
+    --text-secondary: #E2E2E9;
+    --text-muted: #BECABC;
+  }
+
+  body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', sans-serif;
+  }
+}
+
+/* Minimal Flat Container Styles */
+.card-panel {
+  background-color: var(--surface-card);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem; /* 8px container radius */
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.card-panel-active {
+  background-color: var(--surface-card);
+  border: 1px solid #15803D;
+  border-radius: 0.5rem;
+}
+
+/* Thin 2px progress bar utility */
+.progress-line {
+  height: 2px;
+  border-radius: 9999px;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
