@@ -9,10 +9,10 @@ export const worker = {
   ordersRejected: 2,
   hoursActiveToday: 2.8,
   location: {
-    lat: 12.9352,
-    lng: 77.6245,
+    lat: 12.9166,
+    lng: 77.6101,
     city: "Bangalore",
-    area: "Koramangala 4th Block"
+    area: "BTM Layout 2nd Stage"
   },
   weather: {
     temp: "26°C",

@@ -1,59 +1,64 @@
 // Algorithmic Recommendation & Scoring Service for GigPilot AI
 
 export function getRecommendation(payout, distanceKm, fuelCostEstimate, profitEstimate) {
-  const profitMargin = profitEstimate / payout;
+  const profitMargin = payout > 0 ? profitEstimate / payout : 0;
 
-  if (profitEstimate <= 14) {
+  if (profitEstimate <= 20) {
     return {
       action: "REJECT",
-      reason: `Fuel ₹${fuelCostEstimate}, profit only ₹${profitEstimate}. Skip — Koramangala orders average ₹65+ expected in 10 mins.`,
-      confidence: 96
+      reason: `Fuel ₹${fuelCostEstimate}, profit only ₹${profitEstimate}. Wait ~12 min — better orders average ₹120 in this zone.`,
+      confidence: 95
     };
   }
 
   if (profitMargin < 0.35) {
+    const marginPct = Math.round(profitMargin * 100);
     return {
       action: "REJECT",
-      reason: `Low profit margin (${Math.round(profitMargin * 100)}%). Platform underpaying for ${distanceKm}km travel.`,
-      confidence: 91
+      reason: `Profit margin too low (${marginPct}%). Platform underpaying for the distance — skip it.`,
+      confidence: 92
     };
   }
 
   return {
     action: "ACCEPT",
-    reason: `Solid yield — ₹${profitEstimate} net profit for ${distanceKm}km (${Math.round(profitMargin * 100)}% margin). Take immediately!`,
-    confidence: 94
+    reason: `Solid order — ₹${profitEstimate} profit for ${distanceKm}km. Worth taking.`,
+    confidence: 96
   };
 }
 
 export function updateGigDNAScore(worker, workerDecision, recommendedAction) {
-  if (workerDecision === 'accepted') {
-    worker.gigDNA.efficiency = Math.min(100, worker.gigDNA.efficiency + 2);
-    worker.gigDNA.incomeStability = Math.min(100, worker.gigDNA.incomeStability + 1);
-    worker.gigDNA.customerHappiness = Math.min(100, worker.gigDNA.customerHappiness + 1);
+  const dna = worker.gigDNA;
+  const isAccepted = workerDecision === 'accepted';
+  const isRejectRec = recommendedAction === 'REJECT';
+  const isAcceptRec = recommendedAction === 'ACCEPT';
 
-    if (recommendedAction === 'REJECT') {
-      // Overrode warning -> safety score penalty
-      worker.gigDNA.safety = Math.max(0, worker.gigDNA.safety - 4);
-      worker.gigDNA.efficiency = Math.max(0, worker.gigDNA.efficiency - 2);
+  if (isAccepted) {
+    dna.efficiency += 1;
+    dna.incomeStability += 1;
+    if (isRejectRec) {
+      // Worker overrode AI warning to reject a bad order -> penalty on safety
+      dna.safety -= 2;
     }
   } else {
-    if (recommendedAction === 'REJECT') {
+    // Rejected
+    if (isRejectRec) {
       // Smart rejection following AI recommendation
-      worker.gigDNA.reliability = Math.min(100, worker.gigDNA.reliability + 2);
-      worker.gigDNA.safety = Math.min(100, worker.gigDNA.safety + 2);
-    } else {
-      // Rejected good order -> penalty
-      worker.gigDNA.incomeStability = Math.max(0, worker.gigDNA.incomeStability - 3);
+      dna.reliability += 1;
+      dna.safety += 1;
+    } else if (isAcceptRec) {
+      // Rejected a good order -> income stability penalty
+      dna.incomeStability -= 1;
     }
   }
 
+  // Clamp all scores strictly between 0 and 100
+  for (const key in dna) {
+    dna[key] = Math.max(0, Math.min(100, dna[key]));
+  }
+
   const compositeScore = Math.round(
-    (worker.gigDNA.reliability +
-     worker.gigDNA.safety +
-     worker.gigDNA.efficiency +
-     worker.gigDNA.incomeStability +
-     worker.gigDNA.customerHappiness) / 5
+    (dna.reliability + dna.safety + dna.efficiency + dna.incomeStability + dna.customerHappiness) / 5
   );
 
   return compositeScore;
@@ -73,8 +78,7 @@ export function parseOrderOCR({ screenshotType, payout: inputPayout, distanceKm:
     dropLocation: inputDrop || "BTM Layout 2nd Stage"
   };
 
-  const fuelCostEstimate = Math.round(selected.distanceKm * 6.5);
-
+  const fuelCostEstimate = Math.round(selected.distanceKm * 6);
   let trafficDelayMin = 0;
   let fuelSurgeMult = 1.0;
   let trafficDescription = "Flowing traffic smoothly (no delays)";
@@ -95,19 +99,15 @@ export function parseOrderOCR({ screenshotType, payout: inputPayout, distanceKm:
   const totalTimeMin = baseTimeMin + trafficDelayMin;
   const effectiveHourlyRate = Math.round((adjustedProfit / totalTimeMin) * 60);
 
-  let action = "ACCEPT";
-  let reason = `Good return despite traffic — ₹${adjustedProfit} net profit for ${totalTimeMin}m total trip (₹${effectiveHourlyRate}/hr rate).`;
-
-  if (adjustedProfit <= 22 || effectiveHourlyRate < 115) {
-    action = "REJECT";
-    reason = `Traffic congestion adds ${trafficDelayMin}m delay! Effective earnings collapse to ₹${effectiveHourlyRate}/hr (net profit ₹${adjustedProfit}). Skip order.`;
-  }
+  const rec = getRecommendation(selected.payout, selected.distanceKm, adjustedFuelCost, adjustedProfit);
 
   return {
     parsedOrder: {
       id: `OCR-${Date.now().toString().slice(-4)}`,
       payout: selected.payout,
       distanceKm: selected.distanceKm,
+      fuelCostEstimate: adjustedFuelCost,
+      profitEstimate: adjustedProfit,
       pickupLocation: selected.pickupLocation,
       dropLocation: selected.dropLocation,
       baseTimeMin
@@ -122,10 +122,6 @@ export function parseOrderOCR({ screenshotType, payout: inputPayout, distanceKm:
       effectiveHourlyRate,
       trafficDescription
     },
-    recommendation: {
-      action,
-      reason,
-      confidence: 95
-    }
+    recommendation: rec
   };
 }

@@ -190,7 +190,7 @@ export default function App() {
       />
 
       {/* Main Content Area */}
-      <main className="max-w-4xl mx-auto px-4 py-4 space-y-4">
+      <main className="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {activeTab === 'dashboard' && (
           <Dashboard
             dashboardData={dashboardData}

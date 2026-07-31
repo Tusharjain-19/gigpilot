@@ -8,8 +8,8 @@ export default function OrderDecisionModal({ orderData, onAccept, onReject, onCl
   const isAccept = recommendation?.action === 'ACCEPT';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-[#1A1D23] max-w-lg w-full rounded-lg overflow-hidden border border-[#272A31] shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-[#1A1D23] max-w-lg w-full max-h-[90vh] overflow-y-auto rounded-xl border border-[#272A31] shadow-2xl space-y-0">
         
         {/* Recommendation Header Banner */}
         <div className={`p-4 flex items-center gap-3.5 ${

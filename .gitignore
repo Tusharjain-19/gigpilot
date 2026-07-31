@@ -4,4 +4,11 @@ server/node_modules/
 client/dist/
 .DS_Store
 *.log
-.env 
+.env
+server/.env
+*.env
+!*.env.example
+backend.md
+frontend.md
+*.timestamp-*.mjs
+server/database.sqlite

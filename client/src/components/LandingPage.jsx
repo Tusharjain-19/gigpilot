@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { TrendingUp, ShieldCheck, ArrowRight, Bell, Route, Wallet, Zap, Sun, Moon } from 'lucide-react';
+import GigPilotLogo from './GigPilotLogo';
 
 export default function LandingPage({ onLaunchApp, onSimulateOrder, darkMode, onToggleTheme }) {
   useEffect(() => {
@@ -24,12 +25,7 @@ export default function LandingPage({ onLaunchApp, onSimulateOrder, darkMode, on
       {/* Top Navigation */}
       <nav className="fixed top-0 w-full z-50 flex justify-between items-center px-4 sm:px-8 md:px-12 lg:px-16 h-16 max-w-[1440px] left-1/2 -translate-x-1/2 bg-white/95 dark:bg-[#111318]/95 border-b border-slate-200 dark:border-[#272A31] backdrop-blur-md transition-colors">
         <div className="flex items-center gap-4 sm:gap-6">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded bg-[#15803D] flex items-center justify-center text-white font-extrabold shadow-sm">
-              <Zap className="w-4 h-4 fill-white" />
-            </div>
-            <span className="font-heading font-bold text-lg sm:text-xl text-slate-900 dark:text-[#79DB8D] tracking-tight">GigPilot AI</span>
-          </div>
+          <GigPilotLogo size="md" />
           <div className="hidden md:flex gap-6 ml-4 lg:ml-6">
             <a className="text-slate-600 dark:text-[#becabc] hover:text-[#15803D] dark:hover:text-[#79DB8D] transition-colors text-xs sm:text-sm font-medium" href="#recommendations">Product</a>
             <a className="text-slate-600 dark:text-[#becabc] hover:text-[#15803D] dark:hover:text-[#79DB8D] transition-colors text-xs sm:text-sm font-medium" href="#gigdna">GigDNA</a>

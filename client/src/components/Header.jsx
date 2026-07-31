@@ -1,84 +1,98 @@
-import React from 'react';
-import { Activity, Zap, Sun, Moon, Home } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Activity, Zap, Sun, Moon, Home, Globe, ChevronDown, Check } from 'lucide-react';
+import GigPilotLogo from './GigPilotLogo';
 
 export default function Header({ worker, onSimulateOrder, isSimulating, darkMode, onToggleTheme, onGoLanding }) {
+  const [lang, setLang] = useState(window.__selectedLang || 'en');
+  const [isLangOpen, setIsLangOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleLang = (e) => {
+      setLang(e.detail || 'en');
+    };
+    window.addEventListener('langChanged', handleLang);
+
+    // Close dropdown on click outside
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsLangOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      window.removeEventListener('langChanged', handleLang);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const languageOptions = [
+    { code: 'en', name: 'English' },
+    { code: 'hi', name: 'हिन्दी (Hindi)' },
+    { code: 'kn', name: 'ಕನ್ನಡ (Kannada)' },
+    { code: 'bn', name: 'বাংলা (Bengali)' },
+    { code: 'mr', name: 'मराठी (Marathi)' },
+    { code: 'te', name: 'తెలుగు (Telugu)' },
+    { code: 'ta', name: 'தமிழ் (Tamil)' }
+  ];
+
+  const handleSelectLanguage = (code) => {
+    window.__selectedLang = code;
+    setLang(code);
+    setIsLangOpen(false);
+
+    if (window.__onLanguageChange) {
+      window.__onLanguageChange(code);
+    }
+    window.dispatchEvent(new CustomEvent('langChanged', { detail: code }));
+  };
+
+  const currentLangLabel = languageOptions.find(l => l.code === lang)?.name || 'English';
+
   return (
-    <header className="sticky top-0 z-40 bg-[var(--surface-card)] border-b border-[var(--border-color)] px-3 sm:px-4 py-2.5 sm:py-3 transition-colors">
-      <div className="max-w-4xl mx-auto flex items-center justify-between gap-2 sm:gap-3">
+    <header className="sticky top-0 z-40 bg-[var(--surface-card)] border-b border-[var(--border-color)] px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 transition-colors">
+      <div className="w-full max-w-[1600px] mx-auto flex items-center justify-between gap-2 sm:gap-3">
         {/* Logo & Brand */}
-        <div className="flex items-center gap-2 sm:gap-2.5">
-          <div className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded bg-[#15803D] text-white font-extrabold shadow-sm shrink-0">
-            <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-white text-white" />
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <h1 className="font-heading font-semibold text-sm sm:text-base tracking-tight text-[var(--text-primary)]">
-                GigPilot<span className="text-[#15803D]">.AI</span>
-              </h1>
-              <span className="text-[9px] sm:text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-[#15803D]/10 border border-[#15803D]/30 text-[#15803D] dark:text-[#79DB8D] uppercase tracking-wider">
-                COPILOT
-              </span>
-            </div>
-            <p className="text-[10px] sm:text-[11px] text-[var(--text-muted)] flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#15803D]"></span>
-              {worker?.name || "Demo Worker"} • <span className="text-[var(--text-secondary)] font-medium">{worker?.platform || "Swiggy / Zomato"}</span>
-            </p>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <GigPilotLogo size="sm" />
+          <div className="hidden xs:block text-[10px] sm:text-[11px] text-[var(--text-muted)] border-l border-[var(--border-color)] pl-2.5 py-0.5">
+            <span className="text-[var(--text-secondary)] font-medium">{worker?.name || "Demo Worker"}</span>
           </div>
         </div>
 
         {/* Right side controls */}
         <div className="flex items-center gap-1.5 sm:gap-2">
           {/* Language Switcher */}
-          <div className="relative group">
+          <div className="relative" ref={dropdownRef}>
             <button
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-[var(--border-color)] bg-[var(--surface-low)] text-[var(--text-primary)] hover:text-[#15803D] dark:hover:text-[#79DB8D] text-xs font-semibold tracking-wide transition-all focus:outline-none focus:ring-1 focus:ring-[#15803D]"
+              onClick={() => setIsLangOpen(prev => !prev)}
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded border border-[var(--border-color)] bg-[var(--surface-low)] text-[var(--text-primary)] hover:text-[#15803D] dark:hover:text-[#79DB8D] text-xs font-semibold tracking-wide transition-all focus:outline-none focus:ring-1 focus:ring-[#15803D]"
             >
-              <span className="font-mono">🌐</span>
-              <span>{
-                {
-                  'en': 'English',
-                  'hi': 'हिन्दी (Hindi)',
-                  'kn': 'ಕನ್ನಡ (Kannada)',
-                  'bn': 'বাংলা (Bengali)',
-                  'mr': 'मराठी (Marathi)',
-                  'te': 'తెలుగు (Telugu)',
-                  'ta': 'தமிழ் (Tamil)'
-                }[window.__selectedLang || 'en']
-              }</span>
+              <Globe className="w-3.5 h-3.5 text-[#15803D]" />
+              <span className="truncate max-w-[90px] sm:max-w-[120px]">{currentLangLabel}</span>
+              <ChevronDown className={`w-3 h-3 text-[var(--text-muted)] transition-transform duration-200 ${isLangOpen ? 'rotate-180' : ''}`} />
             </button>
             
             {/* Custom Dropdown Options list */}
-            <div className="absolute right-0 mt-1 w-44 rounded bg-[var(--surface-card)] border border-[var(--border-color)] shadow-lg hidden group-hover:block hover:block z-50 py-1 transition-all">
-              {[
-                { code: 'en', name: 'English' },
-                { code: 'hi', name: 'हिन्दी (Hindi)' },
-                { code: 'kn', name: 'ಕನ್ನಡ (Kannada)' },
-                { code: 'bn', name: 'বাংলা (Bengali)' },
-                { code: 'mr', name: 'मराठी (Marathi)' },
-                { code: 'te', name: 'తెలుగు (Telugu)' },
-                { code: 'ta', name: 'தமிழ் (Tamil)' }
-              ].map((lang) => (
-                <button
-                  key={lang.code}
-                  onClick={async () => {
-                    window.__selectedLang = lang.code;
-                    if (window.__onLanguageChange) {
-                      await window.__onLanguageChange(lang.code);
-                    }
-                    // Trigger a re-render by dispatching a custom event
-                    window.dispatchEvent(new CustomEvent('langChanged', { detail: lang.code }));
-                  }}
-                  className={`w-full text-left px-3.5 py-2 text-xs hover:bg-[#15803D]/10 hover:text-[#15803D] dark:hover:text-[#79DB8D] transition-colors flex items-center justify-between ${
-                    (window.__selectedLang || 'en') === lang.code
-                      ? 'text-[#15803D] dark:text-[#79DB8D] font-semibold bg-[#15803D]/5'
-                      : 'text-[var(--text-secondary)]'
-                  }`}
-                >
-                  <span>{lang.name}</span>
-                  {(window.__selectedLang || 'en') === lang.code && <span className="text-[10px]">✓</span>}
-                </button>
-              ))}
-            </div>
+            {isLangOpen && (
+              <div className="absolute right-0 mt-1 w-44 rounded-xl bg-[var(--surface-card)] border border-[var(--border-color)] shadow-xl z-50 py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                {languageOptions.map((l) => (
+                  <button
+                    key={l.code}
+                    onClick={() => handleSelectLanguage(l.code)}
+                    className={`w-full text-left px-3.5 py-2 text-xs hover:bg-[#15803D]/10 hover:text-[#15803D] dark:hover:text-[#79DB8D] transition-colors flex items-center justify-between ${
+                      lang === l.code
+                        ? 'text-[#15803D] dark:text-[#79DB8D] font-bold bg-[#15803D]/10'
+                        : 'text-[var(--text-secondary)]'
+                    }`}
+                  >
+                    <span>{l.name}</span>
+                    {lang === l.code && <Check className="w-3.5 h-3.5 text-[#15803D] dark:text-[#79DB8D]" />}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Landing Page Button */}

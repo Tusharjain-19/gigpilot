@@ -1,14 +1,24 @@
 import express from 'express';
 import { worker, baseZones, mockStores } from '../data/store.js';
 import { getRecommendation, updateGigDNAScore, parseOrderOCR } from '../services/recommendationEngine.js';
+import { calculateSmartLocationRecommendation, getPeakTimeAnalysis } from '../services/smartLocationEngine.js';
+import { calculateTomTomRouteTraffic, fetchTomTomTrafficFlow } from '../services/tomtomTrafficService.js';
 import routesApi from './routesApi.js';
-
 import db from '../db.js';
 
 const router = express.Router();
 
-// Profile / Auth Routes
+function calculateCompositeScore(gigDNA) {
+  return Math.round(
+    (gigDNA.reliability +
+     gigDNA.safety +
+     gigDNA.efficiency +
+     gigDNA.incomeStability +
+     gigDNA.customerHappiness) / 5
+  );
+}
 
+// Profile & Auth Routes
 router.post('/login', (req, res) => {
   const { username, password } = req.body;
   db.get("SELECT * FROM users WHERE username = ? AND password = ?", [username, password], (err, row) => {
@@ -47,66 +57,99 @@ router.get('/benchmarks', (req, res) => {
   });
 });
 
-
 // 1. GET /api/dashboard
 router.get('/dashboard', (req, res) => {
-  const compositeScore = Math.round(
-    (worker.gigDNA.reliability +
-     worker.gigDNA.safety +
-     worker.gigDNA.efficiency +
-     worker.gigDNA.incomeStability +
-     worker.gigDNA.customerHappiness) / 5
-  );
+  const compositeScore = calculateCompositeScore(worker.gigDNA);
 
   res.json({
     worker: {
       id: worker.id,
       name: worker.name,
-      platform: worker.platform
+      platform: worker.platform,
+      location: worker.location
     },
     earningsToday: worker.earningsToday,
     ordersAccepted: worker.ordersAccepted,
     ordersRejected: worker.ordersRejected,
-    hoursActiveToday: Number(worker.hoursActiveToday.toFixed(1)),
+    hoursActiveToday: Number(worker.hoursActiveToday.toFixed(2)),
     compositeScore,
     gigDNA: worker.gigDNA
   });
 });
 
-// 2. GET /api/radar
-router.get('/radar', (req, res) => {
-  const jitteredZones = baseZones.map(zone => {
-    const jitterRate = Math.floor((Math.random() - 0.5) * 16);
-    const jitterDist = (Math.random() - 0.5) * 0.4;
-    return {
-      ...zone,
-      ratePerHour: Math.max(70, zone.ratePerHour + jitterRate),
-      distanceKm: Number(Math.max(0.5, zone.distanceKm + jitterDist).toFixed(1))
-    };
-  });
+// 2. GET /api/radar - Smart Location & Competition Aware Radar
+router.get('/radar', async (req, res) => {
+  try {
+    const lat = req.query.lat ? parseFloat(req.query.lat) : worker.location.lat;
+    const lng = req.query.lng ? parseFloat(req.query.lng) : worker.location.lng;
+    const hour = req.query.hour ? parseInt(req.query.hour) : undefined;
 
-  res.json({
-    zones: jitteredZones,
-    topRecommendation: {
-      zoneId: "z1",
-      zoneName: "Koramangala",
-      actionPrompt: "Move 1.8km North → +₹430 projected gain today.",
-      surgeMultiplier: "1.4x"
-    }
-  });
+    const smartResult = await calculateSmartLocationRecommendation(lat, lng, hour);
+
+    res.json({
+      zones: smartResult.rankedZones,
+      topRecommendation: smartResult.recommendedZone,
+      peakTimeAnalysis: smartResult.peakTimeAnalysis,
+      weather: smartResult.weather,
+      userCoordinates: smartResult.userCoordinates
+    });
+  } catch (err) {
+    console.error("Radar calculation error:", err);
+    res.status(500).json({ error: "Failed to compute radar recommendations" });
+  }
 });
 
-// 3. POST /api/order/simulate
-router.post('/order/simulate', (req, res) => {
-  const payout = Math.floor(Math.random() * (95 - 38 + 1)) + 38;
-  const distanceKm = Number((Math.random() * 4.5 + 1.2).toFixed(1));
-  const fuelCostEstimate = Math.round(distanceKm * 5.2);
-  const profitEstimate = payout - fuelCostEstimate;
+// 3. POST /api/recommend-location
+router.post('/recommend-location', async (req, res) => {
+  try {
+    const { lat, lng, area, customHour } = req.body;
+    const userLat = lat ? parseFloat(lat) : worker.location.lat;
+    const userLng = lng ? parseFloat(lng) : worker.location.lng;
 
+    if (area) {
+      worker.location.area = area;
+    }
+    worker.location.lat = userLat;
+    worker.location.lng = userLng;
+
+    const recommendation = await calculateSmartLocationRecommendation(userLat, userLng, customHour);
+
+    res.json({
+      success: true,
+      message: `Location updated to (${userLat.toFixed(4)}, ${userLng.toFixed(4)})`,
+      ...recommendation
+    });
+  } catch (err) {
+    console.error("Recommend location error:", err);
+    res.status(500).json({ error: "Location recommendation engine failure" });
+  }
+});
+
+// 4. GET /api/live-traffic - TomTom Traffic Flow API Endpoint
+router.get('/live-traffic', async (req, res) => {
+  try {
+    const lat = req.query.lat ? parseFloat(req.query.lat) : worker.location.lat;
+    const lng = req.query.lng ? parseFloat(req.query.lng) : worker.location.lng;
+
+    const traffic = await fetchTomTomTrafficFlow(lat, lng);
+    res.json(traffic);
+  } catch (err) {
+    res.status(500).json({ error: "TomTom traffic API request failed" });
+  }
+});
+
+// 5. POST /api/order/simulate - Live TomTom Traffic Enhanced Simulation
+router.post('/order/simulate', async (req, res) => {
+  const payout = Math.floor(Math.random() * (180 - 40 + 1)) + 40;
+  const distanceKm = Math.floor(Math.random() * 10) + 1;
   const store = mockStores[Math.floor(Math.random() * mockStores.length)];
   const customerLoc = `Sector ${Math.floor(Math.random() * 7) + 1}, Bangalore`;
-  const timeEstimateMin = Math.round(distanceKm * 4.5 + 8);
 
+  // Fetch live TomTom traffic calculation for route
+  const trafficData = await calculateTomTomRouteTraffic(store, customerLoc, distanceKm);
+
+  const fuelCostEstimate = trafficData.totalAdjustedFuelCost;
+  const profitEstimate = payout - fuelCostEstimate;
   const recommendation = getRecommendation(payout, distanceKm, fuelCostEstimate, profitEstimate);
 
   const mockOrder = {
@@ -117,29 +160,34 @@ router.post('/order/simulate', (req, res) => {
     profitEstimate,
     pickupLocation: store,
     dropLocation: customerLoc,
-    timeEstimateMin,
+    timeEstimateMin: trafficData.travelTimeMin,
+    trafficDelayMin: trafficData.trafficDelayMin,
+    trafficSource: trafficData.source,
     timestamp: new Date().toISOString()
   };
 
   res.json({
     order: mockOrder,
+    tomtomTraffic: trafficData,
     recommendation
   });
 });
 
-// 4. POST /api/order/decision
+// 6. POST /api/order/decision
 router.post('/order/decision', (req, res) => {
   const { workerDecision, order, recommendedAction } = req.body;
 
+  const orderProfit = order?.profitEstimate !== undefined ? order.profitEstimate : 40;
+  const recAction = recommendedAction || order?.recommendation?.action || 'ACCEPT';
+
   if (workerDecision === 'accepted') {
-    worker.earningsToday += (order?.profitEstimate || 40);
+    worker.earningsToday += orderProfit;
     worker.ordersAccepted += 1;
     
-    // Log the job to the database for the profile live feed
     const today = new Date().toISOString().split('T')[0];
     db.run(
       "INSERT INTO jobs (user_id, date, earnings, hours) VALUES (?, ?, ?, ?)",
-      [1, today, order?.profitEstimate || 40, (order?.timeEstimateMin || 15) / 60],
+      [1, today, orderProfit, (order?.timeEstimateMin || 15) / 60],
       function(err) {
         if (err) console.error("Error logging job to DB:", err.message);
       }
@@ -150,19 +198,19 @@ router.post('/order/decision', (req, res) => {
 
   worker.hoursActiveToday += 0.25;
 
-  const compositeScore = updateGigDNAScore(worker, workerDecision, recommendedAction);
+  const compositeScore = updateGigDNAScore(worker, workerDecision, recAction);
 
   res.json({
     earningsToday: worker.earningsToday,
     ordersAccepted: worker.ordersAccepted,
     ordersRejected: worker.ordersRejected,
-    hoursActiveToday: Number(worker.hoursActiveToday.toFixed(1)),
+    hoursActiveToday: Number(worker.hoursActiveToday.toFixed(2)),
     compositeScore,
     gigDNA: worker.gigDNA
   });
 });
 
-// 5. GET /api/mission
+// 7. GET /api/mission
 router.get('/mission', (req, res) => {
   const target = 10;
   const progress = worker.ordersAccepted;
@@ -178,19 +226,20 @@ router.get('/mission', (req, res) => {
   });
 });
 
-// 6. GET /api/burnout
+// 8. GET /api/burnout
 router.get('/burnout', (req, res) => {
-  const atRisk = worker.hoursActiveToday >= 4.0;
+  const hours = Number(worker.hoursActiveToday.toFixed(2));
+  const atRisk = hours >= 4.0;
   res.json({
     atRisk,
-    hoursActiveToday: Number(worker.hoursActiveToday.toFixed(1)),
+    hoursActiveToday: hours,
     message: atRisk
-      ? `You've been active for ${worker.hoursActiveToday.toFixed(1)}h continuous driving. High fatigue warning — take a 15-min break to protect safety & GigDNA.`
-      : `Optimal energy zone. 3.5h active today. Keep up the high efficiency!`
+      ? `You've been active for ${hours}h continuous driving. High fatigue warning — take a 15-min break to protect safety & GigDNA.`
+      : `Optimal energy zone (${hours}h active today). Keep up the high efficiency!`
   });
 });
 
-// 7. POST /api/chat
+// 9. POST /api/chat
 router.post('/chat', async (req, res) => {
   const { question } = req.body;
   const query = (question || '').trim();
@@ -199,23 +248,73 @@ router.post('/chat', async (req, res) => {
     return res.status(400).json({ error: "Empty query provided" });
   }
 
+  const lowerQuery = query.toLowerCase();
+
+  // Petrol / Fuel / Diesel / Gas / Price intent (checked BEFORE generic keywords)
+  if (lowerQuery.includes('petrol') || lowerQuery.includes('fuel') || lowerQuery.includes('diesel') || lowerQuery.includes('gas') || (lowerQuery.includes('price') && !lowerQuery.includes('earn'))) {
+    return res.json({
+      answer: `Current petrol price in Bangalore is ₹102.86/L (Diesel: ₹88.94/L, EV Charging: ₹18/kWh). Running cost estimate: ₹6.0/km for 2-wheeler, ₹9.5/km for cab. Always factor fuel cost into order decisions!`
+    });
+  }
+
+  // Spending / Expense / Fuel Cost Spent intent
+  if (lowerQuery.includes('spend') || lowerQuery.includes('spent') || lowerQuery.includes('expense') || lowerQuery.includes('cost today')) {
+    const estSpent = Math.round(worker.ordersAccepted * 24);
+    return res.json({
+      answer: `Today's estimated vehicle fuel expenses: ₹${estSpent} (across ${worker.ordersAccepted} completed deliveries). Net profit after fuel: ₹${worker.earningsToday}.`
+    });
+  }
+
+  // Earnings / Money / Income intent
+  if (lowerQuery.includes('earn') || lowerQuery.includes('money') || lowerQuery.includes('payout') || lowerQuery.includes('revenue') || lowerQuery.includes('how much')) {
+    return res.json({
+      answer: `You've earned ₹${worker.earningsToday} today across ${worker.ordersAccepted} accepted orders (${worker.ordersRejected} rejected). Active hours: ${worker.hoursActiveToday.toFixed(1)}h.`
+    });
+  }
+
+  // Zone / Hotspot / Navigation intent
+  if (lowerQuery.includes('zone') || lowerQuery.includes('where') || lowerQuery.includes('go') || lowerQuery.includes('location') || lowerQuery.includes('hotspot') || lowerQuery.includes('radar')) {
+    return res.json({
+      answer: `Head to Koramangala or Indiranagar corridor! Koramangala currently has Low Driver Competition with 1.95x surge bonus, projected at ₹322/hr.`
+    });
+  }
+
+  // Break / Fatigue / Rest intent
+  if (lowerQuery.includes('break') || lowerQuery.includes('fatigue') || lowerQuery.includes('rest') || lowerQuery.includes('tired') || lowerQuery.includes('sleep')) {
+    const atRisk = worker.hoursActiveToday >= 4.0;
+    return res.json({
+      answer: atRisk
+        ? `Warning: You've been active for ${worker.hoursActiveToday.toFixed(1)} hours continuous driving. High fatigue risk — take a 15-minute break now to protect safety & GigDNA.`
+        : `You've been active for ${worker.hoursActiveToday.toFixed(1)} hours. You're in the optimal energy zone, but listen to your body!`
+    });
+  }
+
+  // Benchmarks / Fair Pay intent
+  if (lowerQuery.includes('benchmark') || lowerQuery.includes('fair') || lowerQuery.includes('underpay') || lowerQuery.includes('rights') || lowerQuery.includes('minimum')) {
+    return res.json({
+      answer: `Fair rate benchmark in Bangalore for delivery is ₹25–₹35/km (min base pay ₹40). Always reject orders with <35% profit margin!`
+    });
+  }
+
+  // Mission / Reward / Target intent
+  if (lowerQuery.includes('mission') || lowerQuery.includes('reward') || lowerQuery.includes('target') || lowerQuery.includes('bonus') || lowerQuery.includes('goal')) {
+    return res.json({
+      answer: `Active Mission: 'Lunch Rush Dominator' — Complete 10 deliveries before 2:30 PM for a ₹350 bonus reward! Progress: ${worker.ordersAccepted}/10 completed.`
+    });
+  }
+
+  // Weather / Rain intent
+  if (lowerQuery.includes('weather') || lowerQuery.includes('rain') || lowerQuery.includes('monsoon') || lowerQuery.includes('temp')) {
+    return res.json({
+      answer: `Current weather in Bangalore: 29°C. Monsoon rain surge adds +25% bonus payout per order. Drive safely on wet roads!`
+    });
+  }
+
   const groqApiKey = process.env.GROQ_API_KEY;
   if (!groqApiKey || groqApiKey.startsWith('gsk_fakeKey')) {
-    // Elegant fallback if Groq API is not configured or is using fake key placeholder
-    let answer = "";
-    const lowerQuery = query.toLowerCase();
-    if (lowerQuery.includes('earn') || lowerQuery.includes('money') || lowerQuery.includes('today')) {
-      answer = `You've earned ₹${worker.earningsToday} today across ${worker.ordersAccepted} completed orders. Net profit margin is sitting at 74%.`;
-    } else if (lowerQuery.includes('zone') || lowerQuery.includes('where') || lowerQuery.includes('go')) {
-      answer = `Head to Koramangala! Demand is High (1.4x surge) averaging ₹245/hr. It's only 1.8km from your location.`;
-    } else if (lowerQuery.includes('break') || lowerQuery.includes('fatigue') || lowerQuery.includes('tired')) {
-      answer = worker.hoursActiveToday >= 4.0
-        ? `Yes! You've been active ${worker.hoursActiveToday.toFixed(1)} hours. Take a 15-minute break now to recover fatigue.`
-        : `You're currently at ${worker.hoursActiveToday.toFixed(1)} hours active. Energy levels good!`;
-    } else {
-      answer = `[Local Mode] GigPilot AI recommends staying near Koramangala / Indiranagar corridor for maximum orders with >35% profit margin. Please configure GROQ_API_KEY in the server .env for full AI response capability.`;
-    }
-    return res.json({ answer });
+    return res.json({
+      answer: `GigPilot AI Status: You've earned ₹${worker.earningsToday} today (${worker.hoursActiveToday.toFixed(1)}h active). Best recommended area: Koramangala corridor (>35% profit margin).`
+    });
   }
 
   db.all("SELECT * FROM fare_benchmarks", [], async (err, benchmarks) => {
@@ -228,21 +327,15 @@ router.post('/chat', async (req, res) => {
       const messages = [
         {
           role: "system",
-          content: `You are GigPilot AI, a supportive, plain-language companion and rights advisor for gig-workers (delivery riders, cab drivers).
-Keep answers short, specific, supportive and numeric.
-Focus on safety, fairness, and worker dignity.
+          content: `You are GigPilot AI, a supportive companion for gig-workers. Short, specific, supportive answers.
 Current shift context:
 - Earnings Today: ₹${worker.earningsToday}
 - Orders Accepted: ${worker.ordersAccepted}
-- Orders Rejected: ${worker.ordersRejected}
-- Hours Active Today: ${worker.hoursActiveToday.toFixed(1)}h
-- GigDNA scores: Reliability: ${worker.gigDNA.reliability}, Safety: ${worker.gigDNA.safety}, Efficiency: ${worker.gigDNA.efficiency}, Income Stability: ${worker.gigDNA.incomeStability}, Customer Happiness: ${worker.gigDNA.customerHappiness}
-- Fare Benchmarks: ${benchmarksText}`
+- Hours Active: ${worker.hoursActiveToday.toFixed(1)}h
+- Petrol Rate: ₹102.86/L
+- GigDNA: ${JSON.stringify(worker.gigDNA)}`
         },
-        {
-          role: "user",
-          content: query
-        }
+        { role: "user", content: query }
       ];
 
       const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -253,36 +346,37 @@ Current shift context:
         },
         body: JSON.stringify({
           model: "llama-3.3-70b-versatile",
-          messages: messages,
+          messages,
           temperature: 0.7,
           max_tokens: 150
         })
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Groq API returned ${response.status}: ${errorText}`);
-      }
-
+      if (!response.ok) throw new Error(`Groq API returned ${response.status}`);
       const data = await response.json();
       const answer = data.choices?.[0]?.message?.content || "No response content from Groq.";
       res.json({ answer });
     } catch (error) {
-      console.error("Groq API Call Error:", error);
+      console.error("Groq API Error:", error);
       res.json({
-        answer: `I had trouble connecting to my brain, but based on your local metrics: You have earned ₹${worker.earningsToday} today, and safety remains at ${worker.gigDNA.safety}/100. Rest if you feel fatigued!`
+        answer: `GigPilot AI Status: Earned ₹${worker.earningsToday} today. Petrol rate: ₹102.86/L. Keep up the high efficiency!`
       });
     }
   });
 });
 
-// 8. POST /api/order/ocr-parse
-router.post('/order/ocr-parse', (req, res) => {
+// 10. POST /api/order/ocr-parse - Enhanced with TomTom Traffic
+router.post('/order/ocr-parse', async (req, res) => {
   const result = parseOrderOCR(req.body);
-  res.json(result);
+  const trafficData = await calculateTomTomRouteTraffic(result.parsedOrder.pickupLocation, result.parsedOrder.dropLocation, result.parsedOrder.distanceKm);
+
+  res.json({
+    ...result,
+    tomtomLiveTraffic: trafficData
+  });
 });
 
-// 9. POST /api/translate
+// 11. POST /api/translate
 router.post('/translate', async (req, res) => {
   const { text, targetLang } = req.body;
   if (!text || !targetLang) {
@@ -291,7 +385,6 @@ router.post('/translate', async (req, res) => {
 
   const groqApiKey = process.env.GROQ_API_KEY;
   if (!groqApiKey || groqApiKey.startsWith('gsk_fakeKey')) {
-    // local mockup response if API key is not ready
     return res.json({ translatedText: `[${targetLang}] ${text}` });
   }
 
@@ -305,29 +398,19 @@ router.post('/translate', async (req, res) => {
       body: JSON.stringify({
         model: "llama-3.3-70b-versatile",
         messages: [
-          {
-            role: "system",
-            content: `You are a translator. Translate the given text into the language code specified: "${targetLang}". Translate precisely, preserving the tone. Return ONLY the translated string.`
-          },
-          {
-            role: "user",
-            content: text
-          }
+          { role: "system", content: `Translate into ${targetLang}. Return ONLY translated string.` },
+          { role: "user", content: text }
         ],
         temperature: 0.3,
         max_tokens: 100
       })
     });
 
-    if (!response.ok) {
-      throw new Error(`Groq API translate failed`);
-    }
-
+    if (!response.ok) throw new Error("Groq translate error");
     const data = await response.json();
     const translatedText = (data.choices?.[0]?.message?.content || text).trim();
     res.json({ translatedText });
   } catch (err) {
-    console.error("Translation API error:", err);
     res.json({ translatedText: `[${targetLang}] ${text}` });
   }
 });
