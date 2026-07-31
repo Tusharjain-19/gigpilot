@@ -28,7 +28,7 @@ Submission for the GigShield Hackathon
 ## Our Solution
 GigPilot AI is a proactive, real-time companion application built specifically for delivery riders and gig workers. Instead of merely logging past trips, GigPilot AI analyzes live traffic, weather surges, and driver density to guide workers to high-yield hotspots before demand shifts occur. It includes an **AI Screenshot OCR Profit Analyzer** that parses uploaded order slips to calculate true net income after fuel and idling delays, protecting workers from underpaid orders. Additionally, it tracks continuous driving hours with **Burnout Guardian** and offers multilingual AI rights advisory.
 
-## AI Component(Optional)
+## AI Component
 The AI component is not mandatory, but it directly affects your AI Integration & Creativity score. Teams that skip it entirely, or fake/hardcode it instead of genuinely integrating it, will be scored significantly lower on this criterion. If you did include one, be specific below name the exact model/API used and what it does in your project.
 
 ● **What AI is used:**
@@ -49,7 +49,7 @@ A rule-backed hybrid approach ensures zero-latency deterministic decisioning dur
 ● **Backend:** Node.js, Express.js, Axios, Dotenv  
 ● **AI/ML:** Groq Llama 3.3-70B LLM, Tesseract OCR Engine  
 ● **Database/Storage:** SQLite3 + Dual In-Memory Store  
-● **Deployment & Hosting:** Vercel / Node Server  
+● **Deployment & Hosting:** Vercel / Node Server  (not deployed yet) 
 ● **Other tools/APIs:** TomTom Live Traffic & Routing API, OpenWeatherMap API, Google Maps Directions API  
 
 ## Features Implemented
