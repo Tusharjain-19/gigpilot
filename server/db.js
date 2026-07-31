@@ -37,12 +37,14 @@ const db = new sqlite3.Database(dbPath, (err) => {
                 min_base_pay REAL
             )`);
 
-            // Insert sample benchmarks
+             // Insert sample benchmarks
             db.get("SELECT count(*) as count FROM fare_benchmarks", (err, row) => {
                 if (row && row.count === 0) {
-                    db.run("INSERT INTO fare_benchmarks (city, service_type, fair_rate_per_km, min_base_pay) VALUES ('Bangalore', 'Food Delivery', 12.5, 30)");
-                    db.run("INSERT INTO fare_benchmarks (city, service_type, fair_rate_per_km, min_base_pay) VALUES ('Bangalore', 'Ride Hail', 18.0, 50)");
-                    db.run("INSERT INTO fare_benchmarks (city, service_type, fair_rate_per_km, min_base_pay) VALUES ('Mumbai', 'Food Delivery', 15.0, 35)");
+                    db.run("INSERT INTO fare_benchmarks (city, service_type, fair_rate_per_km, min_base_pay) VALUES ('Bangalore', 'Food Delivery (Reddit Standard)', 12.0, 20)");
+                    db.run("INSERT INTO fare_benchmarks (city, service_type, fair_rate_per_km, min_base_pay) VALUES ('Bangalore', 'Ride Hail (Reddit Standard)', 18.0, 50)");
+                    db.run("INSERT INTO fare_benchmarks (city, service_type, fair_rate_per_km, min_base_pay) VALUES ('Mumbai', 'Food Delivery (Reddit Standard)', 15.0, 35)");
+                    db.run("INSERT INTO fare_benchmarks (city, service_type, fair_rate_per_km, min_base_pay) VALUES ('Bangalore', 'Rain Surge Peak Hour', 20.0, 45)");
+                    db.run("INSERT INTO fare_benchmarks (city, service_type, fair_rate_per_km, min_base_pay) VALUES ('Bangalore', 'Late Night Fuel Allowance', 16.0, 30)");
                 }
             });
 
