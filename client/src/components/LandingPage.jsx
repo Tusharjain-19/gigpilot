@@ -59,45 +59,43 @@ export default function LandingPage({ onLaunchApp, onSimulateOrder, darkMode, on
       </nav>
 
       <main className="pt-16">
-        {/* Hero Section with Interactive Topographic Radar Line BG */}
-        <section className="relative min-h-[600px] sm:min-h-[700px] md:min-h-[750px] flex flex-col items-center justify-center text-center px-4 sm:px-8 md:px-12 lg:px-16 py-12 sm:py-16 md:py-20 overflow-hidden">
+        {/* Hero Section with Clean Interactive Radar Line BG */}
+        <section className="relative min-h-[500px] sm:min-h-[550px] flex flex-col items-center justify-center text-center px-4 sm:px-8 py-12 overflow-hidden bg-gradient-to-b from-white to-[var(--bg-primary)] dark:from-[#111318] dark:to-[#070A0F]">
           {/* Opportunity Radar Map Background */}
-          <div className="absolute inset-0 z-0 pointer-events-none opacity-15 dark:opacity-25">
+          <div className="absolute inset-0 z-0 pointer-events-none opacity-5 dark:opacity-10">
             <svg className="w-full h-full" height="100%" width="100%">
-              <pattern id="grid" width="80" height="80" patternUnits="userSpaceOnUse">
-                <path d="M 80 0 L 0 0 0 80" fill="none" stroke="currentColor" className="text-slate-300 dark:text-[#3f493f]" strokeWidth="0.5" />
+              <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+                <path d="M 60 0 L 0 0 0 60" fill="none" stroke="currentColor" className="text-slate-300 dark:text-[#3f493f]" strokeWidth="0.5" />
               </pattern>
               <rect width="100%" height="100%" fill="url(#grid)" />
-              <path className="radar-line text-slate-400 dark:text-[#3f493f]" d="M-100,200 Q200,100 500,400 T1200,200" fill="none" stroke="currentColor" strokeWidth="1" />
-              <path className="radar-line text-slate-400 dark:text-[#3f493f]" d="M-50,400 Q300,600 700,300 T1500,500" fill="none" stroke="currentColor" strokeWidth="1" />
             </svg>
           </div>
 
-          <div className="relative z-10 max-w-4xl space-y-4 sm:space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-[#15803D]/10 border border-[#15803D]/30 text-[#15803D] dark:text-[#79DB8D] text-xs font-mono font-semibold uppercase tracking-wider">
-              <Zap className="w-3.5 h-3.5" /> Real-time Proactive Copilot
+          <div className="relative z-10 max-w-3xl space-y-4">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-[#15803D]/10 border border-[#15803D]/30 text-[#15803D] dark:text-[#79DB8D] text-[11px] font-mono font-semibold uppercase tracking-wider">
+              <Zap className="w-3 h-3" /> Real-time Proactive Copilot
             </div>
 
-            <h1 className="font-heading text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight text-slate-900 dark:text-[#e2e2e9] leading-tight">
+            <h1 className="font-heading text-2xl sm:text-4xl font-bold tracking-tight text-[var(--text-primary)] leading-tight">
               Don’t tell workers what happened.<br className="hidden sm:inline" />
-              <span className="text-[#15803D] dark:text-[#79DB8D]"> Tell them what to do next.</span>
+              <span className="text-[#15803D] dark:text-[#79DB8D] block sm:inline"> Tell them what to do next.</span>
             </h1>
 
-            <p className="text-base sm:text-lg md:text-xl text-slate-600 dark:text-[#becabc] max-w-2xl mx-auto font-normal leading-relaxed px-2">
+            <p className="text-xs sm:text-sm text-[var(--text-muted)] max-w-xl mx-auto leading-relaxed px-2 font-medium">
               GigPilot AI analyzes thousands of real-time data points to provide actionable navigation for independent professionals. Precision orchestration for the modern workforce.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4 max-w-sm sm:max-w-none mx-auto w-full">
+            <div className="flex flex-col sm:flex-row gap-2 justify-center pt-2 max-w-xs sm:max-w-none mx-auto w-full">
               <button
                 onClick={onLaunchApp}
-                className="bg-[#15803D] hover:bg-[#166534] text-white dark:text-[#e2e2e9] px-6 py-3 rounded font-semibold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 active:scale-95 shadow-md"
+                className="bg-[#15803D] hover:bg-[#166534] text-white px-5 py-2.5 rounded font-semibold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 active:scale-95 shadow-sm"
               >
                 <span>Launch Live App</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={onSimulateOrder}
-                className="border border-slate-300 dark:border-[#3f493f] text-slate-800 dark:text-[#e2e2e9] hover:bg-slate-100 dark:hover:bg-[#1e2025] px-6 py-3 rounded font-semibold text-xs uppercase tracking-wider transition-all"
+                className="border border-[var(--border-color)] bg-[var(--surface-card)] text-[var(--text-secondary)] hover:bg-[var(--surface-low)] px-5 py-2.5 rounded font-semibold text-xs uppercase tracking-wider transition-all"
               >
                 Simulate Live Order
               </button>
