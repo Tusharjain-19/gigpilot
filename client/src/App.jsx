@@ -37,6 +37,8 @@ export default function App() {
 
   const toggleTheme = () => setDarkMode(prev => !prev);
 
+  const [currentLang, setCurrentLang] = useState('en');
+
   // Initial Data Fetching
   const loadAppData = async () => {
     try {
@@ -58,14 +60,26 @@ export default function App() {
   useEffect(() => {
     loadAppData();
     
+    // Set default lang variable globally if empty
+    if (!window.__selectedLang) {
+      window.__selectedLang = 'en';
+    }
+
+    const handleLangChange = (e) => {
+      setCurrentLang(e.detail || 'en');
+    };
+
+    window.addEventListener('langChanged', handleLangChange);
+
     // Global listener for language changing to reload dashboard data translated if translation API is ready
     window.__onLanguageChange = async (targetLang) => {
+      setCurrentLang(targetLang);
       if (dashboardData) {
-        // Option to dynamically translate elements
         console.log("Language changed to:", targetLang);
       }
     };
     return () => {
+      window.removeEventListener('langChanged', handleLangChange);
       window.__onLanguageChange = null;
     };
   }, [dashboardData]);

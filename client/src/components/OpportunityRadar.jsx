@@ -1,8 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Radar, Navigation, ArrowUpRight, Compass, Sparkles } from 'lucide-react';
+import { translations } from '../services/translations';
 
 export default function OpportunityRadar({ zones = [], topRecommendation }) {
   const [selectedZone, setSelectedZone] = useState(zones[0] || null);
+  const [lang, setLang] = useState(window.__selectedLang || 'en');
+
+  useEffect(() => {
+    const handleLang = (e) => setLang(e.detail || 'en');
+    window.addEventListener('langChanged', handleLang);
+    return () => window.removeEventListener('langChanged', handleLang);
+  }, []);
 
   const getDemandColor = (demand) => {
     switch (demand) {
@@ -38,6 +46,8 @@ export default function OpportunityRadar({ zones = [], topRecommendation }) {
     multiplier: '1.4x'
   };
 
+  const t = translations[lang] || translations.en;
+
   return (
     <div className="card-panel p-4 sm:p-5 relative overflow-hidden">
       {/* Section Title */}
@@ -48,15 +58,15 @@ export default function OpportunityRadar({ zones = [], topRecommendation }) {
           </div>
           <div>
             <h3 className="font-heading font-semibold text-base text-[#F4F4F5] tracking-tight flex items-center gap-2">
-              Opportunity Radar
+              {t.radarTitle}
             </h3>
-            <p className="text-xs text-[#A1A1AA]">Live demand density & real-time rate hotspots</p>
+            <p className="text-xs text-[#A1A1AA]">{t.radarDesc}</p>
           </div>
         </div>
 
         <div className="text-right">
           <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-[#E4E4E7] bg-[#111318] border border-[#272A31] px-2 py-1 rounded flex items-center gap-1">
-            <Compass className="w-3 h-3 text-[#15803D]" /> GPS Sweep
+            <Compass className="w-3 h-3 text-[#15803D]" /> {t.gpsSweep}
           </span>
         </div>
       </div>
@@ -68,14 +78,14 @@ export default function OpportunityRadar({ zones = [], topRecommendation }) {
             <Sparkles className="w-4 h-4" />
           </div>
           <div>
-            <div className="text-[10px] font-mono font-semibold text-[#79DB8D] uppercase tracking-wider">AI Recommendation</div>
+            <div className="text-[10px] font-mono font-semibold text-[#79DB8D] uppercase tracking-wider">{t.aiRecommendation}</div>
             <div className="text-xs sm:text-sm font-medium text-[#F4F4F5]">
               {topRecommendation?.actionPrompt || "Move 1.8km North to Koramangala → +₹430 projected gain today."}
             </div>
           </div>
         </div>
         <button className="hidden sm:flex items-center gap-1 px-3 py-1.5 rounded bg-[#15803D] hover:bg-[#166534] text-[#F4F4F5] text-xs font-semibold transition-all">
-          <Navigation className="w-3.5 h-3.5" /> Route
+          <Navigation className="w-3.5 h-3.5" /> {t.route}
         </button>
       </div>
 

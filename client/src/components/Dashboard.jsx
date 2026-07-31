@@ -1,12 +1,22 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, Zap, ArrowUpRight, Activity } from 'lucide-react';
 import GigDNAScoreCard from './GigDNAScoreCard';
 import BurnoutGuardian from './BurnoutGuardian';
 import MissionPlanner from './MissionPlanner';
+import { translations } from '../services/translations';
 
 export default function Dashboard({ dashboardData, burnoutData, missionData, onSimulateOrder, onSwitchToRadar }) {
+  const [lang, setLang] = useState(window.__selectedLang || 'en');
+
+  useEffect(() => {
+    const handleLang = (e) => setLang(e.detail || 'en');
+    window.addEventListener('langChanged', handleLang);
+    return () => window.removeEventListener('langChanged', handleLang);
+  }, []);
+
   if (!dashboardData) return null;
 
+  const t = translations[lang] || translations.en;
   const { earningsToday, ordersAccepted, ordersRejected, hoursActiveToday, compositeScore, gigDNA } = dashboardData;
   const ratePerHour = hoursActiveToday > 0 ? Math.round(earningsToday / hoursActiveToday) : 0;
 
@@ -17,10 +27,10 @@ export default function Dashboard({ dashboardData, burnoutData, missionData, onS
       <div className="card-panel p-5 relative overflow-hidden">
         <div className="flex items-center justify-between text-xs font-medium text-[#A1A1AA] mb-1">
           <span className="uppercase tracking-wider text-[#79DB8D] font-mono text-[10px] font-semibold flex items-center gap-1.5">
-            <Zap className="w-3.5 h-3.5 fill-[#15803D] text-[#15803D]" /> Shift Earnings Today
+            <Zap className="w-3.5 h-3.5 fill-[#15803D] text-[#15803D]" /> {t.shiftEarnings}
           </span>
           <span className="bg-[#111318] px-2.5 py-1 rounded border border-[#272A31] text-[#E4E4E7] font-mono text-xs">
-            {hoursActiveToday}h Active
+            {hoursActiveToday}{t.hoursActive}
           </span>
         </div>
 
@@ -36,7 +46,7 @@ export default function Dashboard({ dashboardData, burnoutData, missionData, onS
             onClick={onSimulateOrder}
             className="flex items-center gap-1.5 px-3 py-2 rounded bg-[#15803D] hover:bg-[#166534] text-[#F4F4F5] text-xs font-semibold active:scale-95 transition-all"
           >
-            <Activity className="w-3.5 h-3.5" /> Simulate Order
+            <Activity className="w-3.5 h-3.5" /> {t.simulateOrder}
           </button>
         </div>
 
@@ -47,8 +57,8 @@ export default function Dashboard({ dashboardData, burnoutData, missionData, onS
               <CheckCircle className="w-4 h-4" />
             </div>
             <div>
-              <div className="text-[10px] font-mono font-semibold text-[#A1A1AA] uppercase">ACCEPTED</div>
-              <div className="text-sm font-heading font-semibold text-[#F4F4F5]">{ordersAccepted} orders</div>
+              <div className="text-[10px] font-mono font-semibold text-[#A1A1AA] uppercase">{t.accepted}</div>
+              <div className="text-sm font-heading font-semibold text-[#F4F4F5]">{ordersAccepted} {t.orders}</div>
             </div>
           </div>
 
@@ -57,8 +67,8 @@ export default function Dashboard({ dashboardData, burnoutData, missionData, onS
               <XCircle className="w-4 h-4" />
             </div>
             <div>
-              <div className="text-[10px] font-mono font-semibold text-[#A1A1AA] uppercase">REJECTED</div>
-              <div className="text-sm font-heading font-semibold text-[#F4F4F5]">{ordersRejected} orders</div>
+              <div className="text-[10px] font-mono font-semibold text-[#A1A1AA] uppercase">{t.rejected}</div>
+              <div className="text-sm font-heading font-semibold text-[#F4F4F5]">{ordersRejected} {t.orders}</div>
             </div>
           </div>
         </div>
@@ -81,13 +91,13 @@ export default function Dashboard({ dashboardData, burnoutData, missionData, onS
           </div>
           <div>
             <h4 className="font-heading font-semibold text-sm text-[#F4F4F5]">
-              View Opportunity Radar Map
+              {t.viewRadar}
             </h4>
-            <p className="text-xs text-[#A1A1AA]">Koramangala surge active • ₹245/hr estimated</p>
+            <p className="text-xs text-[#A1A1AA]">{t.surgeActive} • {t.estRate}</p>
           </div>
         </div>
         <span className="text-xs font-mono font-semibold text-[#79DB8D] bg-[#15803D]/10 px-3 py-1.5 rounded border border-[#15803D]/30">
-          Open Radar →
+          {t.openRadar}
         </span>
       </div>
 

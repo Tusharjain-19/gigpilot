@@ -1,16 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Send, Bot, User, Sparkles } from 'lucide-react';
 import { api } from '../services/api';
+import { translations } from '../services/translations';
 
 export default function ChatFallback() {
+  const [lang, setLang] = useState(window.__selectedLang || 'en');
+  const t = translations[lang] || translations.en;
+
   const [messages, setMessages] = useState([
     {
       sender: 'bot',
-      text: 'Hello Rajesh! I am watching live order density & your GigDNA scores. Ask me anything about earnings, zones, or fatigue.'
+      text: t.welcomeChat
     }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const handleLang = (e) => {
+      const newLang = e.detail || 'en';
+      setLang(newLang);
+      // Translate the initial greeting dynamically
+      setMessages([{
+        sender: 'bot',
+        text: translations[newLang]?.welcomeChat || translations.en.welcomeChat
+      }]);
+    };
+    window.addEventListener('langChanged', handleLang);
+    return () => window.removeEventListener('langChanged', handleLang);
+  }, []);
 
   const quickPrompts = [
     "How much did I earn today?",
@@ -28,8 +46,16 @@ export default function ChatFallback() {
     setLoading(true);
 
     try {
+      // Backend chat call (will trigger LLM with the custom rules / details)
       const res = await api.sendChatMessage(query);
-      setMessages(prev => [...prev, { sender: 'bot', text: res.answer }]);
+      
+      // If lang is not English, translate the reply dynamically through our translation API
+      let finalReply = res.answer;
+      if (lang !== 'en') {
+        finalReply = await api.translateText(res.answer, lang);
+      }
+
+      setMessages(prev => [...prev, { sender: 'bot', text: finalReply }]);
     } catch (err) {
       setMessages(prev => [...prev, { sender: 'bot', text: 'GigPilot AI recommends staying near Koramangala corridor for orders with >35% profit margin.' }]);
     } finally {
@@ -45,12 +71,12 @@ export default function ChatFallback() {
         </div>
         <div>
           <h4 className="font-heading font-semibold text-sm text-[#F4F4F5] flex items-center gap-2">
-            Copilot Q&A Assistant
+            {t.chatTitle}
             <span className="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded bg-[#111318] text-[#A1A1AA] border border-[#272A31]">
               ASSISTANT
             </span>
           </h4>
-          <p className="text-xs text-[#A1A1AA]">Ask natural language questions about your shift</p>
+          <p className="text-xs text-[#A1A1AA]">{t.chatDesc}</p>
         </div>
       </div>
 
@@ -77,7 +103,7 @@ export default function ChatFallback() {
         ))}
         {loading && (
           <div className="flex items-center gap-2 text-xs text-[#A1A1AA] italic">
-            <Sparkles className="w-3.5 h-3.5 animate-spin text-[#79DB8D]" /> Thinking...
+            <Sparkles className="w-3.5 h-3.5 animate-spin text-[#79DB8D]" /> {t.thinking}
           </div>
         )}
       </div>
@@ -101,7 +127,7 @@ export default function ChatFallback() {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask Copilot a question..."
+          placeholder={t.askQuestion}
           className="flex-1 bg-[#111318] border border-[#272A31] rounded px-3 py-2 text-xs text-[#F4F4F5] focus:outline-none focus:border-[#15803D]"
         />
         <button

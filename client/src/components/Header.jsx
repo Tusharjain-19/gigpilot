@@ -29,24 +29,56 @@ export default function Header({ worker, onSimulateOrder, isSimulating, darkMode
         {/* Right side controls */}
         <div className="flex items-center gap-1.5 sm:gap-2">
           {/* Language Switcher */}
-          <div className="relative">
-            <select
-              value={window.__selectedLang || 'en'}
-              onChange={async (e) => {
-                const newLang = e.target.value;
-                window.__selectedLang = newLang;
-                if (window.__onLanguageChange) {
-                  window.__onLanguageChange(newLang);
-                }
-              }}
-              className="p-1 sm:p-1.5 rounded border border-slate-200 dark:border-[#272A31] bg-slate-100 dark:bg-[#1A1D23] text-slate-700 dark:text-[#A1A1AA] hover:text-[#15803D] dark:hover:text-[#79DB8D] text-xs transition-all focus:outline-none"
+          <div className="relative group">
+            <button
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-slate-200 dark:border-[#272A31] bg-slate-100 dark:bg-[#1A1D23] text-slate-800 dark:text-[#E4E4E7] hover:text-[#15803D] dark:hover:text-[#79DB8D] text-xs font-semibold tracking-wide transition-all focus:outline-none focus:ring-1 focus:ring-[#15803D]"
             >
-              <option value="en">English</option>
-              <option value="kn">ಕನ್ನಡ (Kannada)</option>
-              <option value="hi">हिन्दी (Hindi)</option>
-              <option value="te">తెలుగు (Telugu)</option>
-              <option value="ta">தமிழ் (Tamil)</option>
-            </select>
+              <span className="font-mono">🌐</span>
+              <span>{
+                {
+                  'en': 'English',
+                  'hi': 'हिन्दी (Hindi)',
+                  'kn': 'ಕನ್ನಡ (Kannada)',
+                  'bn': 'বাংলা (Bengali)',
+                  'mr': 'मराठी (Marathi)',
+                  'te': 'తెలుగు (Telugu)',
+                  'ta': 'தமிழ் (Tamil)'
+                }[window.__selectedLang || 'en']
+              }</span>
+            </button>
+            
+            {/* Custom Dropdown Options list */}
+            <div className="absolute right-0 mt-1 w-44 rounded bg-white dark:bg-[#1A1D23] border border-slate-200 dark:border-[#272A31] shadow-lg hidden group-hover:block hover:block z-50 py-1 transition-all animate-fade-in">
+              {[
+                { code: 'en', name: 'English' },
+                { code: 'hi', name: 'हिन्दी (Hindi)' },
+                { code: 'kn', name: 'ಕನ್ನಡ (Kannada)' },
+                { code: 'bn', name: 'বাংলা (Bengali)' },
+                { code: 'mr', name: 'मराठी (Marathi)' },
+                { code: 'te', name: 'తెలుగు (Telugu)' },
+                { code: 'ta', name: 'தமிழ் (Tamil)' }
+              ].map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={async () => {
+                    window.__selectedLang = lang.code;
+                    if (window.__onLanguageChange) {
+                      await window.__onLanguageChange(lang.code);
+                    }
+                    // Trigger a re-render by dispatching a custom event
+                    window.dispatchEvent(new CustomEvent('langChanged', { detail: lang.code }));
+                  }}
+                  className={`w-full text-left px-3.5 py-2 text-xs hover:bg-[#15803D]/10 hover:text-[#15803D] dark:hover:text-[#79DB8D] transition-colors flex items-center justify-between ${
+                    (window.__selectedLang || 'en') === lang.code
+                      ? 'text-[#15803D] dark:text-[#79DB8D] font-semibold bg-[#15803D]/5'
+                      : 'text-slate-700 dark:text-[#becabc]'
+                  }`}
+                >
+                  <span>{lang.name}</span>
+                  {(window.__selectedLang || 'en') === lang.code && <span className="text-[10px]">✓</span>}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Landing Page Button */}

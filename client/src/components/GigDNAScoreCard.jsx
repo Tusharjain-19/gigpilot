@@ -1,15 +1,26 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dna, ShieldCheck, TrendingUp, Zap, Heart, AlertTriangle } from 'lucide-react';
+import { translations } from '../services/translations';
 
 export default function GigDNAScoreCard({ gigDNA, compositeScore }) {
+  const [lang, setLang] = useState(window.__selectedLang || 'en');
+
+  useEffect(() => {
+    const handleLang = (e) => setLang(e.detail || 'en');
+    window.addEventListener('langChanged', handleLang);
+    return () => window.removeEventListener('langChanged', handleLang);
+  }, []);
+
   if (!gigDNA) return null;
 
+  const t = translations[lang] || translations.en;
+
   const metrics = [
-    { label: 'Reliability', score: gigDNA.reliability, icon: ShieldCheck, color: 'bg-[#15803D]', desc: 'Acceptance accuracy' },
-    { label: 'Safety', score: gigDNA.safety, icon: AlertTriangle, color: 'bg-[#C2410C]', desc: 'Fatigue avoidance' },
-    { label: 'Efficiency', score: gigDNA.efficiency, icon: Zap, color: 'bg-[#15803D]', desc: 'Net ₹/km profit ratio' },
-    { label: 'Income Stability', score: gigDNA.incomeStability, icon: TrendingUp, color: 'bg-[#15803D]', desc: 'Consistent high-margin picks' },
-    { label: 'Customer Happiness', score: gigDNA.customerHappiness, icon: Heart, color: 'bg-[#15803D]', desc: 'Estimated satisfaction' },
+    { label: t.reliability, score: gigDNA.reliability, icon: ShieldCheck, color: 'bg-[#15803D]', desc: 'Acceptance accuracy' },
+    { label: t.safety, score: gigDNA.safety, icon: AlertTriangle, color: 'bg-[#C2410C]', desc: 'Fatigue avoidance' },
+    { label: t.efficiency, score: gigDNA.efficiency, icon: Zap, color: 'bg-[#15803D]', desc: 'Net ₹/km profit ratio' },
+    { label: t.incomeStability, score: gigDNA.incomeStability, icon: TrendingUp, color: 'bg-[#15803D]', desc: 'Consistent high-margin picks' },
+    { label: t.customerHappiness, score: gigDNA.customerHappiness, icon: Heart, color: 'bg-[#15803D]', desc: 'Estimated satisfaction' },
   ];
 
   const getScoreBadge = (score) => {
@@ -29,12 +40,12 @@ export default function GigDNAScoreCard({ gigDNA, compositeScore }) {
           </div>
           <div>
             <h3 className="font-heading font-semibold text-base text-[#F4F4F5] tracking-tight flex items-center gap-2">
-              GigDNA Score
+              {t.compositeScore}
               <span className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded border ${badge.color}`}>
                 {badge.text}
               </span>
             </h3>
-            <p className="text-xs text-[#A1A1AA]">Continuous AI performance index (recalculated live)</p>
+            <p className="text-xs text-[#A1A1AA]">{t.gigDnaCardDesc}</p>
           </div>
         </div>
 
