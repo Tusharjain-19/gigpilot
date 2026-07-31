@@ -4,23 +4,37 @@
 
 @layer base {
   :root {
-    --bg-primary: #F1F5F9;
+    --bg-primary: #FAFAF9;
     --surface-card: #FFFFFF;
-    --surface-low: #E2E8F0;
-    --border-color: #CBD5E1;
-    --text-primary: #0F172A;
-    --text-secondary: #334155;
-    --text-muted: #64748B;
+    --surface-low: #F3F4F6;
+    --surface-elevated: #FFFFFF;
+    --border-color: #E5E7EB;
+    --text-primary: #1A1A1A;
+    --text-secondary: #374151;
+    --text-muted: #6B7280;
+
+    /* Accents */
+    --color-accent: #F59E0B;
+    --color-success: #16A34A;
+    --color-danger: #DC2626;
+    --color-info: #3B82F6;
   }
   
   .dark {
-    --bg-primary: #070A0F;
-    --surface-card: #111318;
-    --surface-low: #1A1D23;
-    --border-color: #272A31;
-    --text-primary: #F4F4F5;
-    --text-secondary: #E2E2E9;
-    --text-muted: #BECABC;
+    --bg-primary: #121212;
+    --surface-card: #1E1E1E;
+    --surface-low: #161616;
+    --surface-elevated: #262626;
+    --border-color: #2E2E2E;
+    --text-primary: #F5F5F5;
+    --text-secondary: #CCCCCC;
+    --text-muted: #A0A0A0;
+
+    /* Accents */
+    --color-accent: #FBBF24;
+    --color-success: #4ADE80;
+    --color-danger: #F87171;
+    --color-info: #60A5FA;
   }
 
   body {
@@ -39,8 +53,9 @@
 .card-panel {
   background-color: var(--surface-card);
   border: 1px solid var(--border-color);
-  border-radius: 0.5rem; /* 8px container radius */
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  border-radius: 0.75rem; /* rounded-xl (12px) corners */
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .card-panel-active {
