@@ -311,7 +311,7 @@ router.post('/chat', async (req, res) => {
   }
 
   const groqApiKey = process.env.GROQ_API_KEY;
-  if (!groqApiKey || groqApiKey.startsWith('gsk_fakeKey')) {
+  if (!groqApiKey || groqApiKey.startsWith('your_') || groqApiKey.startsWith('gsk_fake') || groqApiKey === 'demo') {
     return res.json({
       answer: `GigPilot AI Status: You've earned ₹${worker.earningsToday} today (${worker.hoursActiveToday.toFixed(1)}h active). Best recommended area: Koramangala corridor (>35% profit margin).`
     });
@@ -384,7 +384,7 @@ router.post('/translate', async (req, res) => {
   }
 
   const groqApiKey = process.env.GROQ_API_KEY;
-  if (!groqApiKey || groqApiKey.startsWith('gsk_fakeKey')) {
+  if (!groqApiKey || groqApiKey.startsWith('your_') || groqApiKey.startsWith('gsk_fake') || groqApiKey === 'demo') {
     return res.json({ translatedText: `[${targetLang}] ${text}` });
   }
 
