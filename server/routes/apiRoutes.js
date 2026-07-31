@@ -1,6 +1,7 @@
 import express from 'express';
 import { worker, baseZones, mockStores } from '../data/store.js';
 import { getRecommendation, updateGigDNAScore, parseOrderOCR } from '../services/recommendationEngine.js';
+import routesApi from './routesApi.js';
 
 import db from '../db.js';
 
@@ -331,4 +332,5 @@ router.post('/translate', async (req, res) => {
   }
 });
 
+router.use('/routes', routesApi);
 export default router;
